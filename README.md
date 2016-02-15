@@ -2,7 +2,13 @@
 
 The Book-Crossing dataset is available [here](http://www2.informatik.uni-freiburg.de/~cziegler/BX/)
 
-This is a basic clustering model of books based on ratings.
+This is a basic clustering model of books based on ratings that utilizes collaborative filtering. It uses both personalized and non personalized collaborative filtering.
+
+### Personalized
+Weighs ratings of books to make recommendations based on similar users.
+
+### Non-Personalized
+Considers top 50 highest rated books and makes recommendations of these books to users who haven't read them.
 
 ### Setup
 
