@@ -19,23 +19,27 @@ def item_to_item_similarity(books, users):
     book_comparisons = {}
     for idx_book, row_books in books[:100].iterrows():
         tempMat = pd.DataFrame()
-        #booker = pd.DataFrame(index=[idx_book])
         for idx_user, row_user in users[users['ISBN'] == idx_book].iterrows():
             tempDF = pd.DataFrame(index=[idx_user])
             for user, row_user2 in users[users.index == idx_user].iterrows():
                 tempDF[row_user2['ISBN']] = row_user2['Book-Rating']
             tempMat = tempMat.append(tempDF)
-            #tempMat.to_csv(str(idx_book) + '.csv')
         if len(tempMat) > 0:
-            print tempMat.values.T
+            print extract_vectors_from_dataframe(tempMat, idx_book)
     return 1
 
-def compare_arrays(x,y):
-    new_arr = []
-    for i in range(len(x)):
-        if x[i] != None and y[i] != None:
-            new_arr.append([x[i], y[i]])
-    return np.array(new_arr).T
+def extract_vectors_from_dataframe(x, book_title):
+    new_vec = []
+    for name, row in x.iteritems(): 
+        temp_vec = []
+        if name == book_title:
+            continue
+        for val, rating in row.iteritems():
+            if np.isnan(x[book_title][val]) == False and np.isnan(rating) == False:
+                temp_vec.append([x[book_title][val], rating])
+        if len(temp_vec) > 1:
+            new_vec.append(np.array(temp_vec).T)
+    return new_vec
 
 # Load data
 #rated_books = brs.load_rating_data('BX-Book-Ratings.csv')
