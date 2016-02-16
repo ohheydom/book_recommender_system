@@ -8,17 +8,25 @@ This is a basic clustering model of books based on ratings that utilizes collabo
 Weighs ratings of books to make recommendations based on similar users.
 
 ### Non-Personalized
-Considers top 50 highest rated books and makes recommendations of these books to users who haven't read them.
+Considers top n highest rated books and makes recommendations of these books to a user according to what he/she hasn't yet rated.
 
 ### Setup
 
-Please download the dataset from the above website. Put all three files into the same directory as ```book_crossing_clusters.py```. Then run
+Please download the Book Crossing Dataset from the above website. Put all three files into the same directory as the python files. 
 
-```python book_crossing_clusters.py```
+### Usage
+
+For the Non-personalized Recommender System:
+
+```python non_personalized_cf.py```
+
+Or for the Personalized Recommender System:
+
+```python personalized_cf.py```
 
 ### Todo
 
-* Build a recommender system (If there is a lot of agreement between two users, recommend other 8s, 9s, or 10s to each other)
+* Build a personalized recommender system (If there is a lot of agreement between two users, recommend other 8s, 9s, or 10s to each other)
 * Plot and discuss the 0 values and the significance. Perhaps people haven't read these books.
   * If creating a recommender service, remove these from being put on lists
   * If nobody is reading these books, that perhaps means nobody is buying them either 

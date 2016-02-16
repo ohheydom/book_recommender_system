@@ -1,4 +1,5 @@
 BX-Book-Ratings.csv
 BX-Books.csv
 BX-Users.csv
-book_crossing_clusters.pyc
+*.csv
+*.pyc

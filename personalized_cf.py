@@ -2,31 +2,63 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import book_crossing_clusters
+import book_recommender_system as brs
 from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
 
-# Personalized Collaborative Filtering
+# Personalized Item Based Collaborative Filtering
 # Creates features for rankings of top 50 most ranked books, not necessarily most popular
 # Each sample will look like the following
 # UserId Book-1-Rating Book-2-Rating Book-3-Rating ... Book-n-Rating
 # I can then cluster users according to how similarly their features line up.
 
+def recommend_books(user, top_books, book_titles):
+    return nil
+
+def item_to_item_similarity(books, users):
+    book_comparisons = {}
+    for idx_book, row_books in books[:100].iterrows():
+        tempMat = pd.DataFrame()
+        #booker = pd.DataFrame(index=[idx_book])
+        for idx_user, row_user in users[users['ISBN'] == idx_book].iterrows():
+            tempDF = pd.DataFrame(index=[idx_user])
+            for user, row_user2 in users[users.index == idx_user].iterrows():
+                tempDF[row_user2['ISBN']] = row_user2['Book-Rating']
+            tempMat = tempMat.append(tempDF)
+            #tempMat.to_csv(str(idx_book) + '.csv')
+        if len(tempMat) > 0:
+            print tempMat.values.T
+    return 1
+
+def compare_arrays(x,y):
+    new_arr = []
+    for i in range(len(x)):
+        if x[i] != None and y[i] != None:
+            new_arr.append([x[i], y[i]])
+    return np.array(new_arr).T
+
 # Load data
-book_list = book_crossing_clusters.load_book_data('BX-Book-Ratings.csv')
+#rated_books = brs.load_rating_data('BX-Book-Ratings.csv')
+#book_data = brs.load_book_data('BX-Books.csv')
+
+rated_books = brs.load_rating_data('testing_data/book_ratings.csv')
+book_data = brs.load_book_data('testing_data/books.csv')
 
 # Preprocess
 # Unfortunately, the amount of 0s in the dataset was heavily skewing the data.
 # Perhaps users had simply rated books 0 that they hadn't read yet. We can use this data in another way, which we'll get to later.
 # This removes all 0 values, which gives us about a third of the data to utilize
-book_list = book_list[book_list['Book-Rating'] != 0]
+rated_books = rated_books[rated_books['Book-Rating'] != 0].drop([11676])
+
+item_to_item_similarity(book_data, rated_books)
 
 # Find top 20 users with the most ratings
-rater_list = book_list.index.value_counts()[:20]
+rater_list = rated_books.index.value_counts()[:20]
 
 # Top rater ids and their respective series objects
 top_raters = np.asarray(rater_list.axes).tolist()[0][0:2]
-top_rater_books = book_list.loc[book_list.index == top_raters[0]]
-second_rater_books = book_list.loc[book_list.index == top_raters[1]]
+top_rater_books = rated_books.loc[rated_books.index == top_raters[0]]
+second_rater_books = rated_books.loc[rated_books.index == top_raters[1]]
 
 # Books that both raters rate
 books_in_common = pd.merge(top_rater_books, second_rater_books, how='inner', on=['ISBN']).sort_values('Book-Rating_x')
