@@ -8,7 +8,7 @@ import numpy as np
 # Returns a DataFrame of recommended books based on the top rated books that the user has not seen
 def recommend_books(user, top_books, book_titles):
     l = list(set(top_books) - set(user['ISBN'].values))
-    return brs.map_isbns_to_book_titles(book_titles, l)
+    return brs.get_book_titles(l, book_titles)
 
 # Returns a Pandas index of the top n rated books
 def highest_rated_books(rated_books, n):
@@ -26,4 +26,4 @@ rated_books = rated_books[rated_books['Book-Rating'] != 0]
 rater_list = rated_books.index.value_counts()[:10]
 user = rated_books[rated_books.index == np.asarray(rater_list.axes).tolist()[0][0]]
 top_books = highest_rated_books(rated_books, 100)
-print recommend_books(user, top_books, book_titles)['Book-Title']
+print recommend_books(user, top_books, book_titles)

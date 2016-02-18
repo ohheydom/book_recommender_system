@@ -12,5 +12,8 @@ def load_book_data(location):
     book_titles = pd.read_csv(location, sep=";", quotechar="\"", escapechar="\\")
     return book_titles.set_index(['ISBN'])
 
-def map_isbns_to_book_titles(book_titles, isbns):
-    return book_titles[book_titles.index.isin(isbns)]
+def get_book_titles(book_titles, book_list):
+    if type(book_titles) is str:
+        return book_list[book_list.index == book_titles]['Book-Title']
+    return book_list[book_list.index.isin(book_titles)]['Book-Title']
+
