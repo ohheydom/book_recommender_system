@@ -17,3 +17,9 @@ def get_book_titles(book_titles, book_list):
         return book_list[book_list.index == book_titles]['Book-Title']
     return book_list[book_list.index.isin(book_titles)]['Book-Title']
 
+def user_id_to_series(user, ratings):
+    user_rows = ratings[ratings.index == user]
+    user_series = pd.Series()
+    for _, row in user_rows.iterrows():
+        user_series[row['ISBN']] = row['Book-Rating']
+    return user_series

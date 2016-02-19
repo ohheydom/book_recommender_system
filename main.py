@@ -3,9 +3,10 @@ import non_personalized_cf as npcf
 import book_recommender_system as brs
 import numpy as np
 import matplotlib.pyplot as plt
+import cPickle as pickle
 
 # Load data
-all_books = brs.load_book_data('book_data/BX-Books.csv')
+#all_books = brs.load_book_data('book_data/BX-Books.csv')
 rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
 #rated_books = brs.load_rating_data('book_data/book_ratings.csv')
 #all_books = brs.load_book_data('book_data/books.csv')
@@ -24,30 +25,37 @@ rated_books = rated_books.groupby([rated_books['ISBN']]).filter(lambda x: len(x)
 # Remove all ratings where user only voted for one book
 rated_books = rated_books.groupby([rated_books.index]).filter(lambda x: len(x) > 1)
 
+
+# Personalized Collaborative Filtering
+
 # DataFrame calculations
+#cf = pcf.PersonalizedCF(ratings = rated_books)
 #book_matrix = item_to_item_similarity_1(rated_books, min_ratings)
 #print book_matrix
 
-# Personalized
+# Dict calculations
 #cf = pcf.PersonalizedCF(ratings = rated_books)
 #books, ratings = cf.restructure_data()
 #cf.i_to_i_s(books, ratings, min_ratings)
-#print cf.create_dict_of_similar_items(0.5)
+#similar_items = cf.create_dict_of_similar_items(0.5)
+#pickle.dump(similar_items, open('similar_items.p', 'wb'))
 
-# Dict calculations
-#books, user_ratings = pcf.restructure_data(rated_books)
-#book_matrix = pcf.i_to_i_s(books, user_ratings, min_ratings)
-#print book_matrix
+saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
+cf = pcf.PersonalizedCF(ratings=rated_books, similar_items=saved_similar_items)
+user = brs.user_id_to_series(276680, rated_books)
+pred = cf.predict_item(user, "0688163165")
+print pred
+print cf.top_n(user, 50)
 
 
-# Non-Personalized
+# Non-Personalized Collaborative Filtering
 
 # Let's use the top rater and print out a list of the most popular books that he/she hasn't read yet.
-rater_list = rated_books.index.value_counts()[:10]
-ncf = npcf.NonPersonalizedCF(rated_books, all_books)
-user = rated_books[rated_books.index == np.asarray(rater_list.axes).tolist()[0][0]]
-top_books = ncf.highest_rated_books()
-print ncf.recommend_books(user, top_books)
+#rater_list = rated_books.index.value_counts()[:10]
+#ncf = npcf.NonPersonalizedCF(rated_books, all_books)
+#user = rated_books[rated_books.index == np.asarray(rater_list.axes).tolist()[0][0]]
+#top_books = ncf.highest_rated_books()
+#print ncf.recommend_books(user, top_books)
 
 # Graphs
 
