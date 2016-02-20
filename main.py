@@ -19,11 +19,11 @@ rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
 rated_books = rated_books[rated_books['Book-Rating'] != 0]
 
 # The following methods remove all books with only n ratings
-min_ratings = 4
-rated_books = rated_books.groupby([rated_books['ISBN']]).filter(lambda x: len(x) >= min_ratings)
+min_ratings = 2
+rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_ratings)
 
-# Remove all ratings where user only voted for one book
-rated_books = rated_books.groupby([rated_books.index]).filter(lambda x: len(x) > 1)
+# Remove all ratings where a user voted on 2 or less books
+rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) > 2)
 
 
 # Personalized Collaborative Filtering
@@ -35,9 +35,10 @@ rated_books = rated_books.groupby([rated_books.index]).filter(lambda x: len(x) >
 
 # Dict calculations
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
-cf = pcf.PersonalizedCF()
-cf.fit(rated_books, 4)
-pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))
+#cf = pcf.PersonalizedCF()
+#cf.fit(rated_books, 6)
+#print len(cf.similar_items_)
+#pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))
 
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
 #cf = pcf.PersonalizedCF(ratings=rated_books, similar_items=saved_similar_items)
@@ -50,10 +51,10 @@ pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))
 # Non-Personalized Collaborative Filtering
 
 # Let's use the top rater and print out a list of the most popular books that he/she hasn't read yet.
-#rater_list = rated_books.index.value_counts()[:10]
+#rater_list = rated_books['User-ID'].value_counts()[:10]
 #ncf = npcf.NonPersonalizedCF(rated_books, all_books)
-#user = rated_books[rated_books.index == np.asarray(rater_list.axes).tolist()[0][0]]
-#top_books = ncf.highest_rated_books()
+#user = rated_books[rated_books['User-ID'] == np.asarray(rater_list.axes).tolist()[0][0]]
+#top_books = ncf.highest_rated_books(n=1500)
 #print ncf.recommend_books(user, top_books)
 
 # Graphs

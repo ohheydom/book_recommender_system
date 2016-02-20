@@ -26,15 +26,15 @@ class PersonalizedCF(object):
 
     # item_to_item_similarity takes in a DataFrame of ratings and minimum comparisons allowed
     def item_to_item_similarity_1(self, ratings, min_comparisons):
-        books = pd.unique(ratings['ISBN'].ravel())
+        books = pd.unique(ratings.index.ravel())
         self.book_comparisons_ = pd.DataFrame(index=books)
         for idx_book in books:
             tempMat = pd.DataFrame()
-            book_raters = ratings[ratings['ISBN'] == idx_book]
-            for idx_user, row_user in book_raters.iterrows():
-                tempDF = pd.DataFrame(index=[idx_user])
-                for user, row_user2 in ratings[ratings.index == idx_user].iterrows():
-                    tempDF[row_user2['ISBN']] = row_user2['Book-Rating']
+            book_raters = ratings[ratings.index == idx_book]
+            for idx_book, row_user in book_raters.iterrows():
+                tempDF = pd.DataFrame(index=[row_user['User-ID']])
+                for book, row_user2 in ratings[ratings['User-ID'] == row_user['User-ID']].iterrows():
+                    tempDF[book] = row_user2['Book-Rating']
                 tempMat = tempMat.append(tempDF)
             if len(tempMat) > 1:
                 self.extract_vectors_from_dataframe(tempMat, idx_book, min_comparisons)
@@ -42,17 +42,17 @@ class PersonalizedCF(object):
 
     # item_to_item_similarity takes in a DataFrame of ratings and minimum comparisons allowed
     def item_to_item_similarity_2(self, ratings, min_comparisons):
-        books = pd.unique(ratings['ISBN'].ravel())
+        books = pd.unique(ratings.index.ravel())
         self.book_comparisons_ = pd.DataFrame(index=books)
         for book in books:
-            users = ratings[ratings['ISBN'] == book].index.values
+            users = ratings[ratings.index == book]['User-ID'].values
             tempMat = pd.DataFrame(index=users)
-            for idx_user, row_user in ratings[ratings.index.isin(users)].iterrows():
-                tempMat.loc[idx_user, row_user['ISBN']] = row_user['Book-Rating']
+            for idx_book, row_user in ratings[ratings['User-ID'].isin(users)].iterrows():
+                tempMat.loc[row_user['User-ID'], idx_book] = row_user['Book-Rating']
             self.extract_vectors_from_dataframe(tempMat, book, min_comparisons)
         self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
 
-    # extract_vectors_from_dataframe takes in a DataFrame of book comparisons, a DataFrame of users and their ratings, a book title string, and the minimum comparisons allowed
+    # extract_vectors_from_dataframe takes in a DataFrame of users and their ratings, a book title string, and the minimum comparisons allowed
     def extract_vectors_from_dataframe(self, x, book_title, min_comparisons):
         for name, row in x.iteritems(): 
             x_vec, y_vec = [], []
@@ -69,9 +69,9 @@ class PersonalizedCF(object):
     def restructure_data(self, ratings):
         books = defaultdict(list)
         user_ratings = defaultdict(dict)
-        for user, idx_row in ratings.iterrows():
-            books[idx_row['ISBN']].append(user)
-            user_ratings[user].update({idx_row['ISBN']: self.transform_rating(idx_row['Book-Rating'])})
+        for book, idx_row in ratings.iterrows():
+            books[book].append(idx_row['User-ID'])
+            user_ratings[idx_row['User-ID']].update({book: self.transform_rating(idx_row['Book-Rating'])})
         return (books, user_ratings)
 
     # i_to_i_s takes in a hash of all the books mapped to users, a hash where users are mapped to their ratings, and minimum comparisons allowed. These hashes can be created with the restructure_data() function on the original rating dataset.
@@ -86,11 +86,10 @@ class PersonalizedCF(object):
             self.e_v_f_d(nh, book, np.unique(list(itertools.chain(*items))), min_comparisons)
         self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
 
-    # e_v_f_d takes in a DataFrame of book comparisons, a dict of users and their ratings,a book title string, an array of book titles to compare, and the minimum comparisons allowed
+    # e_v_f_d takes in a dict of users and their ratings,a book title string, an array of book titles to compare, and the minimum comparisons allowed
     def e_v_f_d(self, nh, book_title, items, min_comparisons):
+        items = items[items != book_title]
         for i in items:
-            if i == book_title:
-                continue
             v1, v2 = [], []
             for u, v in nh.iteritems():
                 if (i in v) == False:

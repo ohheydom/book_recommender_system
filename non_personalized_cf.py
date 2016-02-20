@@ -12,7 +12,8 @@ class NonPersonalizedCF(object):
 
     # Returns a DataFrame of recommended books based on the top rated books that the user has not seen
     def recommend_books(self, user, top_books):
-        l = list(set(top_books) - set(user['ISBN'].values))
+        l = list(set(top_books) - set(user.index.values))
+        print l
         if len(self.book_list_) == 0:
             return l
         return brs.get_book_titles(l, self.book_list_)
@@ -20,4 +21,4 @@ class NonPersonalizedCF(object):
     # Returns a Pandas index of the top n rated books
     def highest_rated_books(self, n=50, min_rating=8, max_rating=10):
         b = self.ratings_[self.ratings_['Book-Rating'].isin(np.arange(min_rating, max_rating+1))]
-        return b.stack().value_counts()[:n].axes[0][3:]
+        return b.index.value_counts()[:n].axes[0]
