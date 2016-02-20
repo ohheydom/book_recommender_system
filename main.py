@@ -34,18 +34,17 @@ rated_books = rated_books.groupby([rated_books.index]).filter(lambda x: len(x) >
 #print book_matrix
 
 # Dict calculations
-#cf = pcf.PersonalizedCF(ratings = rated_books)
-#books, ratings = cf.restructure_data()
-#cf.i_to_i_s(books, ratings, min_ratings)
-#similar_items = cf.create_dict_of_similar_items(0.5)
-#pickle.dump(similar_items, open('similar_items.p', 'wb'))
+#saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
+cf = pcf.PersonalizedCF()
+cf.fit(rated_books, 4)
+pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))
 
-saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
-cf = pcf.PersonalizedCF(ratings=rated_books, similar_items=saved_similar_items)
-user = brs.user_id_to_series(276680, rated_books)
-pred = cf.predict_item(user, "0688163165")
-print pred
-print cf.top_n(user, 50)
+#saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
+#cf = pcf.PersonalizedCF(ratings=rated_books, similar_items=saved_similar_items)
+#user = brs.user_id_to_series(276680, rated_books)
+#pred = cf.predict_item(user, "0688163165")
+#print pred
+#print cf.top_n(user, 50)
 
 
 # Non-Personalized Collaborative Filtering

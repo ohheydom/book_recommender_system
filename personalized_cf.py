@@ -6,41 +6,51 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Personalized Item Based Collaborative Filtering
 class PersonalizedCF(object):
-    def __init__(self, ratings, book_list=None, similar_items=None):
-        self.ratings_ = ratings
+    def __init__(self, book_list=None, similar_items=None, model='dict', threshold=0.5):
         self.book_list_ = book_list
         self.book_comparisons_ = pd.DataFrame() # DataFrame of all book_comparisons
         self.similar_items_ = similar_items # Dict of items mapped to their similar items and cosine similarity values
+        self.model_ = model # Which model to use when fitting the data
+        self.threshold_ = threshold # Between 0 and 1. Items where the cosine similarity is greater than or equal to the threshold will be considered similar
+
+    # fit receives an input of the DataFrame of ratings and the minimum number of comparisons required and creates a DataFrame of all the comparisons and the dict of similar items. If loading in similar items when creating the PersonalizedCF object, this step is unnecessary.
+    def fit(self, ratings, min_comparisons=4):
+        if self.model_ == 'dict':
+            dict_books, dict_ratings = self.restructure_data(ratings)
+            self.i_to_i_s(dict_books, dict_ratings, min_comparisons)
+        elif self.model_ == 'data1':
+            self.item_to_item_similarity_1(ratings, min_comparisons)
+        else:
+            self.item_to_item_similarity_2(ratings, min_comparisons)
+        self.create_dict_of_similar_items(self.threshold_)
 
     # item_to_item_similarity takes in a DataFrame of ratings and minimum comparisons allowed
-    def item_to_item_similarity_1(self, min_comparisons=8):
-        books = pd.unique(self.ratings_['ISBN'].ravel())
+    def item_to_item_similarity_1(self, ratings, min_comparisons):
+        books = pd.unique(ratings['ISBN'].ravel())
         self.book_comparisons_ = pd.DataFrame(index=books)
         for idx_book in books:
             tempMat = pd.DataFrame()
-            book_raters = self.ratings_[self.ratings_['ISBN'] == idx_book]
+            book_raters = ratings[ratings['ISBN'] == idx_book]
             for idx_user, row_user in book_raters.iterrows():
                 tempDF = pd.DataFrame(index=[idx_user])
-                for user, row_user2 in self.ratings_[self.ratings_.index == idx_user].iterrows():
+                for user, row_user2 in ratings[ratings.index == idx_user].iterrows():
                     tempDF[row_user2['ISBN']] = row_user2['Book-Rating']
                 tempMat = tempMat.append(tempDF)
             if len(tempMat) > 1:
                 self.extract_vectors_from_dataframe(tempMat, idx_book, min_comparisons)
         self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
-        return self.book_comparisons_.dropna(how='all')
 
     # item_to_item_similarity takes in a DataFrame of ratings and minimum comparisons allowed
-    def item_to_item_similarity_2(self, min_comparisons=8):
-        books = pd.unique(self.ratings_['ISBN'].ravel())
+    def item_to_item_similarity_2(self, ratings, min_comparisons):
+        books = pd.unique(ratings['ISBN'].ravel())
         self.book_comparisons_ = pd.DataFrame(index=books)
         for book in books:
-            users = self.ratings_[self.ratings_['ISBN'] == book].index.values
+            users = ratings[ratings['ISBN'] == book].index.values
             tempMat = pd.DataFrame(index=users)
-            for idx_user, row_user in self.ratings_[self.ratings_.index.isin(users)].iterrows():
+            for idx_user, row_user in ratings[ratings.index.isin(users)].iterrows():
                 tempMat.loc[idx_user, row_user['ISBN']] = row_user['Book-Rating']
             self.extract_vectors_from_dataframe(tempMat, book, min_comparisons)
         self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
-        return self.book_comparisons_.dropna(how='all')
 
     # extract_vectors_from_dataframe takes in a DataFrame of book comparisons, a DataFrame of users and their ratings, a book title string, and the minimum comparisons allowed
     def extract_vectors_from_dataframe(self, x, book_title, min_comparisons):
@@ -56,16 +66,16 @@ class PersonalizedCF(object):
                 self.book_comparisons_.loc[book_title, name] = cosine_similarity([x_vec], [y_vec])
 
     # restructure_data returns a tuple containing a dict of books along with the users that rated it, and a dict of users and all their ratings
-    def restructure_data(self):
+    def restructure_data(self, ratings):
         books = defaultdict(list)
         user_ratings = defaultdict(dict)
-        for user, idx_row in self.ratings_.iterrows():
+        for user, idx_row in ratings.iterrows():
             books[idx_row['ISBN']].append(user)
             user_ratings[user].update({idx_row['ISBN']: self.transform_rating(idx_row['Book-Rating'])})
         return (books, user_ratings)
 
     # i_to_i_s takes in a hash of all the books mapped to users, a hash where users are mapped to their ratings, and minimum comparisons allowed. These hashes can be created with the restructure_data() function on the original rating dataset.
-    def i_to_i_s(self, books, users, min_comparisons=8):
+    def i_to_i_s(self, books, users, min_comparisons):
         self.book_comparisons_ = pd.DataFrame(index=books.keys())
         for book, users_arr in books.iteritems():
             nh = {}
@@ -75,7 +85,6 @@ class PersonalizedCF(object):
                 items.append(users[user].keys())
             self.e_v_f_d(nh, book, np.unique(list(itertools.chain(*items))), min_comparisons)
         self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
-        return self.book_comparisons_
 
     # e_v_f_d takes in a DataFrame of book comparisons, a dict of users and their ratings,a book title string, an array of book titles to compare, and the minimum comparisons allowed
     def e_v_f_d(self, nh, book_title, items, min_comparisons):
@@ -122,14 +131,13 @@ class PersonalizedCF(object):
         return {}
 
     # create_dict_of_similar_users takes in a threshold for similarity. It returns a dict with isbns mapped to other isbns and their similarities according to the book calculations done with i_to_i_s
-    def create_dict_of_similar_items(self, threshold=0.5):
+    def create_dict_of_similar_items(self, threshold):
         sim = defaultdict(dict)
         for row in self.book_comparisons_.iterrows():
             for col in row[1].iteritems():
                 if col[1] >= threshold:
                     sim[row[0]].update({col[0]: col[1]})
         self.similar_items_ = sim
-        return sim
 
     # top_n takes in a Series of a user containing isbns and their corresponding ratings and returns the n most similar items to all the items that a user has liked. To create the proper series, you can use the book_recommender_system library's user_id_to_series.
     def top_n(self, user, n):
