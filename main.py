@@ -7,8 +7,8 @@ import cPickle as pickle
 
 # Load data
 #all_books = brs.load_book_data('book_data/BX-Books.csv')
-rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
-#rated_books = brs.load_rating_data('book_data/book_ratings.csv')
+#rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
+rated_books = brs.load_rating_data('book_data/book_ratings.csv')
 #all_books = brs.load_book_data('book_data/books.csv')
 
 # Preprocess
@@ -16,14 +16,14 @@ rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
 # Unfortunately, the amount of 0s in the dataset was heavily skewing the data.
 # Perhaps users had simply rated books 0 that they hadn't read yet. We can use this data in another way, which we'll get to later.
 # This removes all 0 values, which gives us about a third of the data to utilize
-rated_books = rated_books[rated_books['Book-Rating'] != 0]
-
-# The following methods remove all books with only n ratings
-min_ratings = 2
-rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_ratings)
-
-# Remove all ratings where a user voted on 2 or less books
-rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) > 2)
+#rated_books = rated_books[rated_books['Book-Rating'] != 0]
+#
+## The following methods remove all books with only n ratings
+#min_ratings = 40
+#rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_ratings)
+#
+## Remove all ratings where a user voted on 2 or less books
+#rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) > 8)
 
 
 # Personalized Collaborative Filtering
@@ -35,7 +35,11 @@ rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x
 
 # Dict calculations
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
-#cf = pcf.PersonalizedCF()
+cf = pcf.PersonalizedCF(model='data3')
+cf.fit(rated_books, 1)
+print cf.book_comparisons_
+#cf.ito(d, 24)
+#print cf.book_comparisons_
 #cf.fit(rated_books, 6)
 #print len(cf.similar_items_)
 #pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))

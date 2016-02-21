@@ -20,8 +20,11 @@ class PersonalizedCF(object):
             self.i_to_i_s(dict_books, dict_ratings, min_comparisons)
         elif self.model_ == 'data1':
             self.item_to_item_similarity_1(ratings, min_comparisons)
-        else:
+        elif self.model_ == 'data2':
             self.item_to_item_similarity_2(ratings, min_comparisons)
+        else:
+            books = self.restructure_dataframe(ratings)
+            self.item_to_item_similarity_3(books, min_comparisons)
         self.create_dict_of_similar_items(self.threshold_)
 
     # item_to_item_similarity takes in a DataFrame of ratings and minimum comparisons allowed
@@ -52,6 +55,26 @@ class PersonalizedCF(object):
             self.extract_vectors_from_dataframe(tempMat, book, min_comparisons)
         self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
 
+    def item_to_item_similarity_3(self, ratings, min_comparisons):
+        books = ratings.columns.values
+        self.book_comparisons_ = pd.DataFrame(index=books, columns=books)
+        n = len(books)
+        for b1i in range(n):
+            for b2i in range(b1i+1, n):
+                x_vec, y_vec = [], []
+                for idx, _ in enumerate(ratings.iloc[:, b1i]):
+                    val1 = ratings.iloc[:, b1i].iloc[idx]
+                    val2 = ratings.iloc[:, b2i].iloc[idx]
+                    if np.isnan(val1) or np.isnan(val2):
+                        continue
+                    x_vec.append(self.transform_rating(val1))
+                    y_vec.append(self.transform_rating(val2))
+                if len(x_vec) > min_comparisons:
+                    col1 = ratings.columns[b1i]
+                    col2 = ratings.columns[b2i]
+                    self.book_comparisons_.loc[col1, col2] = cosine_similarity([x_vec], [y_vec])
+                    self.book_comparisons_.loc[col2, col1] = cosine_similarity([x_vec], [y_vec])
+
     # extract_vectors_from_dataframe takes in a DataFrame of users and their ratings, a book title string, and the minimum comparisons allowed
     def extract_vectors_from_dataframe(self, x, book_title, min_comparisons):
         for name, row in x.iteritems(): 
@@ -64,6 +87,15 @@ class PersonalizedCF(object):
                     y_vec.append(self.transform_rating(rating))
             if len(x_vec) > min_comparisons:
                 self.book_comparisons_.loc[book_title, name] = cosine_similarity([x_vec], [y_vec])
+
+    # restructure_dataframe returns a DataFrame where the users are indices and the columns are the books. Each cell contains the corresponding rating.
+    def restructure_dataframe(self, ratings):
+        users = set(ratings['User-ID'].values)
+        cols = set(ratings.index.values)
+        df = pd.DataFrame(index=users, columns=cols)
+        for book, idx_row in ratings.iterrows():
+            df.loc[idx_row['User-ID'], book] = idx_row['Book-Rating'] 
+        return df
 
     # restructure_data returns a tuple containing a dict of books along with the users that rated it, and a dict of users and all their ratings
     def restructure_data(self, ratings):
