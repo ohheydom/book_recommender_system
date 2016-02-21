@@ -34,19 +34,13 @@ rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x
 #print book_matrix
 
 # Dict calculations
-#saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
-cf = pcf.PersonalizedCF()
+saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
 book_list, rating_list = brs.restructure_data(rated_books)
-X_train, X_test, y_test =  brs.train_test_split(rating_list, 0.1)
-cf.fit(book_list, X_train, 8)
-#print cf.book_comparisons_
-#pred = cf.predict(X_test)
-#print brs.mean_absolute_error(y_test, pred)
-
-#cf.ito(d, 24)
-#print cf.book_comparisons_
-#cf.fit(rated_books, 6)
-#print len(cf.similar_items_)
+X_train, X_test, y_test =  brs.train_test_split(rating_list, test_size=0.1, random_state=33)
+cf = pcf.PersonalizedCF(similar_items=saved_similar_items, X_train=X_train)
+#cf.fit(book_list, X_train, 2)
+pred = cf.predict(X_test)
+print brs.mean_absolute_error(y_test, pred)
 #pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))
 
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )

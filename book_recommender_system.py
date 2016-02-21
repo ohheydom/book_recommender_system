@@ -47,8 +47,10 @@ def transform_rating(val):
 
 # Given a dict of users, this will split the users and their ratings according to the test size. It returns a tuple of dicts (X_train, X_test, y_test) where X_test contains users with two of their ratings set to None. y_test is a dict of users and their two actual rating values for their corresponding books. 
 # {user : {'b1':'R', 'b2':'R'}, user2 : {'b1':'R', 'b2':R}}
-def train_test_split(dict_of_users, test_size=0.2):
+def train_test_split(dict_of_users, test_size=0.2, random_state=None):
     X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
+    if random_state != None:
+        random.seed(random_state)
     for user, books in dict_of_users.iteritems():
         book_keys = books.keys()
         random.shuffle(book_keys)
@@ -68,15 +70,10 @@ def train_test_split(dict_of_users, test_size=0.2):
 
 def mean_absolute_error(y_test, y_pred):
     adder = 0.0
-    n = 0.0
-    nones = 0
+    n = 0
     for user, books in y_pred.iteritems():
         for book, rating in books.iteritems():
             if not rating == None:
                 n += 1
                 adder += abs(y_test[user][book] - y_pred[user][book])
-            else:
-                nones += 1
-    print n
-    print nones
     return adder/n

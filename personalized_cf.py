@@ -6,22 +6,20 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Personalized Item Based Collaborative Filtering
 class PersonalizedCF(object):
-    def __init__(self, book_list=None, similar_items=None, threshold=0.5):
+    def __init__(self, book_list=None, similar_items=defaultdict(dict), threshold=0.5, X_train={}):
         self.book_list_ = book_list
-        self.book_comparisons_ = pd.DataFrame() # DataFrame of all book_comparisons
+        self.book_comparisons_ = defaultdict(dict) #pd.DataFrame() # DataFrame of all book_comparisons
         self.similar_items_ = similar_items # Dict of items mapped to their similar items and cosine similarity values
         self.threshold_ = threshold # Between 0 and 1. Items where the cosine similarity is greater than or equal to the threshold will be considered similar
-        self.X_train_ = {}
+        self.X_train_ = X_train
 
-    # fit receives an input of the DataFrame of ratings and the minimum number of comparisons required and creates a DataFrame of all the comparisons and the dict of similar items. If loading in similar items when creating the PersonalizedCF object, this step is unnecessary.
+    # fit receives an input of the DataFrame of ratings and the minimum number of comparisons required and creates a DataFrame of all the comparisons and the dict of similar items. If loading in similar_items and X_train when creating the PersonalizedCF object, this step is unnecessary.
     def fit(self, books, ratings, min_comparisons=4):
         self.X_train_ = ratings
         self.i_to_i_s(books, ratings, min_comparisons)
-        self.create_dict_of_similar_items(self.threshold_)
 
     # i_to_i_s takes in a hash of all the books mapped to users, a hash where users are mapped to their ratings, and minimum comparisons allowed. These hashes can be created with the restructure_data() function on the original rating dataset.
     def i_to_i_s(self, books, users, min_comparisons):
-        self.book_comparisons_ = pd.DataFrame(index=books.keys())
         for book, users_arr in books.iteritems():
             nh = {}
             items = []
@@ -29,7 +27,6 @@ class PersonalizedCF(object):
                 nh[user] = users[user]
                 items.append(users[user].keys())
             self.e_v_f_d(nh, book, np.unique(list(itertools.chain(*items))), min_comparisons)
-        self.book_comparisons_ = self.book_comparisons_.dropna(how='all')
 
     # e_v_f_d takes in a dict of users and their ratings,a book title string, an array of book titles to compare, and the minimum comparisons allowed
     def e_v_f_d(self, nh, book_title, items, min_comparisons):
@@ -42,7 +39,11 @@ class PersonalizedCF(object):
                 v1.append(v[book_title])
                 v2.append(v[i])
             if len(v1) >= min_comparisons:
-                self.book_comparisons_.loc[book_title, i] = cosine_similarity([v1], [v2])
+                val = cosine_similarity([v1], [v2])[0][0]
+                self.book_comparisons_[book_title][i] = val
+                if val >= self.threshold_:
+                    self.similar_items_[book_title][i] = val
+
 
     # transform_rating converts ratings into either -1, 0, or 1 to allow for a wider range of values when computing cosine similarity
     def transform_rating(self, val):
@@ -74,26 +75,17 @@ class PersonalizedCF(object):
             for book, _ in books.iteritems():
                 adder, denom = 0.0, 0.0
                 if not book in self.similar_items_:
-                    predictions[user].update({book: None})
+                    predictions[user][book] = None
                     continue
                 for book2, similarity in self.similar_items_[book].iteritems():
                     if book2 in self.X_train_[user]:
                         adder += self.X_train_[user][book2] * similarity
                         denom += similarity
                 if denom == 0:
-                    predictions[user].update({book: None})
+                    predictions[user][book] = None
                     continue
-                predictions[user].update({book: adder/denom})
+                predictions[user][book] = adder/denom
         return predictions
-
-    # create_dict_of_similar_users takes in a threshold for similarity. It returns a dict with isbns mapped to other isbns and their similarities according to the book calculations done with i_to_i_s
-    def create_dict_of_similar_items(self, threshold):
-        sim = defaultdict(dict)
-        for row in self.book_comparisons_.iterrows():
-            for col in row[1].iteritems():
-                if col[1] >= threshold:
-                    sim[row[0]].update({col[0]: col[1]})
-        self.similar_items_ = sim
 
     # top_n takes in a Series of a user containing isbns and their corresponding ratings and returns the n most similar items to all the items that a user has liked. To create the proper series, you can use the book_recommender_system library's user_id_to_series.
     def top_n(self, user, n):
