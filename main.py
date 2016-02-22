@@ -19,11 +19,11 @@ rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
 rated_books = rated_books[rated_books['Book-Rating'] != 0]
 #
 ## The following methods remove all books with only n ratings
-min_ratings = 12
+min_ratings = 4
 rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_ratings)
-#
+
 ## Remove all ratings where a user voted on 2 or less books
-rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) > 12)
+rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) > 3)
 
 
 # Personalized Collaborative Filtering
@@ -34,11 +34,11 @@ rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x
 #print book_matrix
 
 # Dict calculations
-saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
-book_list, rating_list = brs.restructure_data(rated_books)
+#saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
+book_list, rating_list, user_means = brs.restructure_data(rated_books, True)
 X_train, X_test, y_test =  brs.train_test_split(rating_list, test_size=0.1, random_state=33)
-cf = pcf.PersonalizedCF(similar_items=saved_similar_items, X_train=X_train)
-#cf.fit(book_list, X_train, 2)
+cf = pcf.PersonalizedCF(similarity='cosine')
+cf.fit(book_list, X_train, 2, user_means)
 pred = cf.predict(X_test)
 print brs.mean_absolute_error(y_test, pred)
 #pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))

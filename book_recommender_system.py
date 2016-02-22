@@ -1,4 +1,5 @@
 import random
+import math
 from collections import defaultdict
 import pandas as pd
 import numpy as np
@@ -27,13 +28,18 @@ def user_id_to_series(user, ratings):
         user_series[row['ISBN']] = row['Book-Rating']
     return user_series
 
-# restructure_data returns a tuple containing a dict of books along with the users that rated it, and a dict of users and all their ratings
-def restructure_data(ratings):
+# restructure_data returns a tuple containing a dict of books along with the users that rated it, and a dict of users and all their ratings, and if means=True, a dict of user's ratings means (for adjusted cosine similarity)
+def restructure_data(ratings, means=False):
     books = defaultdict(list)
     user_ratings = defaultdict(dict)
     for book, idx_row in ratings.iterrows():
         books[book].append(idx_row['User-ID'])
-        user_ratings[idx_row['User-ID']].update({book: transform_rating(idx_row['Book-Rating'])})
+        user_ratings[idx_row['User-ID']][book] = transform_rating(idx_row['Book-Rating'])
+    if means == True:
+        user_means = {}
+        for k, v in user_ratings.iteritems():
+            user_means[k] = np.mean(v.values())
+        return (books, user_ratings, user_means)
     return (books, user_ratings)
 
 # transform_rating converts ratings into either -1, 0, or 1 to allow for a wider range of values when computing cosine similarity
@@ -44,6 +50,34 @@ def transform_rating(val):
     elif val < 5:
         return -1
     return 0
+
+def cosine_similarity(vec_1, vec_2):
+    num = 0.0
+    den1 = 0.0
+    den2 = 0.0
+    for i, _ in enumerate(vec_1):
+        v1 = vec_1[i]
+        v2 = vec_2[i]
+        num += v1 * v2
+        den1 += v1**2
+        den2 += v2**2
+    return num/(math.sqrt(den1)*math.sqrt(den2))
+
+
+def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
+    num = 0.0
+    den1 = 0.0
+    den2 = 0.0
+    for i, _ in enumerate(vec_1):
+        ua = user_averages[i]
+        val1 = vec_1[i] - ua
+        val2 = vec_2[i] - ua
+        num += val1 * val2
+        den1 += val1**2
+        den2 += val2**2
+    if den1 == 0 or den2 == 0:
+        return 0
+    return num/(math.sqrt(den1)*math.sqrt(den2))
 
 # Given a dict of users, this will split the users and their ratings according to the test size. It returns a tuple of dicts (X_train, X_test, y_test) where X_test contains users with two of their ratings set to None. y_test is a dict of users and their two actual rating values for their corresponding books. 
 # {user : {'b1':'R', 'b2':'R'}, user2 : {'b1':'R', 'b2':R}}

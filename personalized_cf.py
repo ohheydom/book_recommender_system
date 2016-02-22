@@ -2,23 +2,25 @@ import itertools
 from collections import defaultdict
 import pandas as pd
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+import book_recommender_system as brs
 
 # Personalized Item Based Collaborative Filtering
 class PersonalizedCF(object):
-    def __init__(self, book_list=None, similar_items=defaultdict(dict), threshold=0.5, X_train={}):
+    def __init__(self, book_list=None, similar_items=defaultdict(dict), threshold=0.5, similarity='cosine', X_train={}):
         self.book_list_ = book_list
         self.book_comparisons_ = defaultdict(dict) #pd.DataFrame() # DataFrame of all book_comparisons
         self.similar_items_ = similar_items # Dict of items mapped to their similar items and cosine similarity values
         self.threshold_ = threshold # Between 0 and 1. Items where the cosine similarity is greater than or equal to the threshold will be considered similar
-        self.X_train_ = X_train
+        self.X_train_ = X_train # Training Data, only necessary if not fitting and you want to predict
+        self.similarity_ = similarity  # Similarity function, either 'cosine' or 'adjusted_cosine'
 
     # fit receives an input of the DataFrame of ratings and the minimum number of comparisons required and creates a DataFrame of all the comparisons and the dict of similar items. If loading in similar_items and X_train when creating the PersonalizedCF object, this step is unnecessary.
-    def fit(self, books, ratings, min_comparisons=4):
+    def fit(self, books, ratings, min_comparisons=4, means={}):
         self.X_train_ = ratings
+        self.means_ = means
         self.i_to_i_s(books, ratings, min_comparisons)
 
-    # i_to_i_s takes in a hash of all the books mapped to users, a hash where users are mapped to their ratings, and minimum comparisons allowed. These hashes can be created with the restructure_data() function on the original rating dataset.
+    # i_to_i_s (item to item similarity) takes in a hash of all the books mapped to users, a hash where users are mapped to their ratings, and minimum comparisons allowed. These hashes can be created with the restructure_data() function on the original rating dataset.
     def i_to_i_s(self, books, users, min_comparisons):
         for book, users_arr in books.iteritems():
             nh = {}
@@ -26,9 +28,12 @@ class PersonalizedCF(object):
             for user in users_arr:
                 nh[user] = users[user]
                 items.append(users[user].keys())
-            self.e_v_f_d(nh, book, np.unique(list(itertools.chain(*items))), min_comparisons)
+            if self.similarity_ == 'adjusted-cosine':
+                self.e_v_f_d_adjusted_cosine(nh, book, np.unique(list(itertools.chain(*items))), min_comparisons)
+            else:
+                self.e_v_f_d(nh, book, np.unique(list(itertools.chain(*items))), min_comparisons)
 
-    # e_v_f_d takes in a dict of users and their ratings,a book title string, an array of book titles to compare, and the minimum comparisons allowed
+    # e_v_f_d takes in a dict of users and their ratings, a book title string, an array of book titles to compare, and the minimum comparisons allowed and stores the entire dictionary of computed comparisons (via cosine similarity) in the instance variable book_comparisons_. The method also saves the most similar items according to the given threshold in the instance variable similar_items_.
     def e_v_f_d(self, nh, book_title, items, min_comparisons):
         items = items[items != book_title]
         for i in items:
@@ -39,7 +44,24 @@ class PersonalizedCF(object):
                 v1.append(v[book_title])
                 v2.append(v[i])
             if len(v1) >= min_comparisons:
-                val = cosine_similarity([v1], [v2])[0][0]
+                val = brs.cosine_similarity(v1, v2)
+                self.book_comparisons_[book_title][i] = val
+                if val >= self.threshold_:
+                    self.similar_items_[book_title][i] = val
+
+    # e_v_f_d takes in a dict of users and their ratings, a book title string, an array of book titles to compare, and the minimum comparisons allowed and stores the entire dictionary of computed comparisons (via adjusted cosine similarity) in the instance variable book_comparisons_. The method also saves the most similar items according to the given threshold in the instance variable similar_items_. Typically more accurate but more costly to compute than cosine similarity
+    def e_v_f_d_adjusted_cosine(self, nh, book_title, items, min_comparisons):
+        items = items[items != book_title]
+        for i in items:
+            v1, v2, ua = [], [], []
+            for u, v in nh.iteritems():
+                if (i in v) == False or (book_title in v) == False:
+                    continue
+                v1.append(v[book_title])
+                v2.append(v[i])
+                ua.append(self.means_[u])
+            if len(v1) >= min_comparisons:
+                val = brs.adjusted_cosine_similarity(ua, v1, v2)
                 self.book_comparisons_[book_title][i] = val
                 if val >= self.threshold_:
                     self.similar_items_[book_title][i] = val
