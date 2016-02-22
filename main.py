@@ -13,32 +13,28 @@ rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
 
 # Preprocess
 
-# Unfortunately, the amount of 0s in the dataset was heavily skewing the data.
-# Perhaps users had simply rated books 0 that they hadn't read yet. We can use this data in another way, which we'll get to later.
-# This removes all 0 values, which gives us about a third of the data to utilize
-rated_books = rated_books[rated_books['Book-Rating'] != 0]
-#
-## The following methods remove all books with only n ratings
+# Set variables
 min_ratings = 4
+min_user_votes = 3
+min_comparisons = 2
+
+# Unfortunately, the amount of 0s in the dataset was heavily skewing the data. This removes all 0 values, which gives us about a third of the data to utilize
+rated_books = rated_books[rated_books['Book-Rating'] != 0]
+
+## The following function keeps only the books with greater than min_ratings
 rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_ratings)
 
 ## Remove all ratings where a user voted on 2 or less books
-rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) > 3)
+rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_votes)
 
 
 # Personalized Collaborative Filtering
 
-# DataFrame calculations
-#cf = pcf.PersonalizedCF(ratings = rated_books)
-#book_matrix = item_to_item_similarity_1(rated_books, min_ratings)
-#print book_matrix
-
-# Dict calculations
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
 book_list, rating_list, user_means = brs.restructure_data(rated_books, True)
 X_train, X_test, y_test =  brs.train_test_split(rating_list, test_size=0.1, random_state=33)
 cf = pcf.PersonalizedCF(similarity='cosine')
-cf.fit(book_list, X_train, 2, user_means)
+cf.fit(books=book_list, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
 pred = cf.predict(X_test)
 print brs.mean_absolute_error(y_test, pred)
 #pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))

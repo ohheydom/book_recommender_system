@@ -34,7 +34,7 @@ def restructure_data(ratings, means=False):
     user_ratings = defaultdict(dict)
     for book, idx_row in ratings.iterrows():
         books[book].append(idx_row['User-ID'])
-        user_ratings[idx_row['User-ID']][book] = transform_rating(idx_row['Book-Rating'])
+        user_ratings[idx_row['User-ID']][book] = idx_row['Book-Rating']
     if means == True:
         user_means = {}
         for k, v in user_ratings.iteritems():
@@ -42,22 +42,10 @@ def restructure_data(ratings, means=False):
         return (books, user_ratings, user_means)
     return (books, user_ratings)
 
-# transform_rating converts ratings into either -1, 0, or 1 to allow for a wider range of values when computing cosine similarity
-def transform_rating(val):
-    return val
-    if val > 5:
-        return 1
-    elif val < 5:
-        return -1
-    return 0
-
 def cosine_similarity(vec_1, vec_2):
-    num = 0.0
-    den1 = 0.0
-    den2 = 0.0
+    num, den1, den2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):
-        v1 = vec_1[i]
-        v2 = vec_2[i]
+        v1, v2 = vec_1[i], vec_2[i]
         num += v1 * v2
         den1 += v1**2
         den2 += v2**2
@@ -65,9 +53,7 @@ def cosine_similarity(vec_1, vec_2):
 
 
 def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
-    num = 0.0
-    den1 = 0.0
-    den2 = 0.0
+    num, den1, den2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):
         ua = user_averages[i]
         val1 = vec_1[i] - ua
@@ -88,8 +74,7 @@ def train_test_split(dict_of_users, test_size=0.2, random_state=None):
     for user, books in dict_of_users.iteritems():
         book_keys = books.keys()
         random.shuffle(book_keys)
-        n = len(books)
-        test_n = int(n * test_size) + 1
+        test_n = int(len(books) * test_size) + 1
         idx = 0
         for key in book_keys:
             if idx < test_n:
@@ -101,13 +86,11 @@ def train_test_split(dict_of_users, test_size=0.2, random_state=None):
     return (X_train, X_test, y_test)
 
 # mean_absolute_error takes in a dict of users mapped to books and their respective ratings and the estimated values according to the model. It returns the mean absolute errorvalue. Lower is better.
-
 def mean_absolute_error(y_test, y_pred):
-    adder = 0.0
-    n = 0
+    total, n = 0.0, 0
     for user, books in y_pred.iteritems():
         for book, rating in books.iteritems():
             if not rating == None:
                 n += 1
-                adder += abs(y_test[user][book] - y_pred[user][book])
-    return adder/n
+                total += abs(y_test[user][book] - y_pred[user][book])
+    return total/n
