@@ -42,6 +42,8 @@ class PersonalizedCF(object):
 
     # calculate_similarity(users, book_title, items, min_comparisons) takes in a dict of users and their ratings, a book title string, an array of book titles to compare, and the minimum comparisons allowed and stores the entire dictionary of computed comparisons (via cosine similarity) in the instance variable book_comparisons_. The method also saves the most similar items according to the given threshold in the instance variable similar_items_.
     def calculate_similarity(self, users, book_title, items, min_comparisons):
+        if len(items) == 0:
+            return
         items = items[items != book_title]
         for i in items:
             v1, v2 = [], []
@@ -58,6 +60,8 @@ class PersonalizedCF(object):
 
     # calculate_similarity_adjusted_cosine(users, book_title, items, min_comparisons) takes in a dict of users and their ratings, a book title string, an array of book titles to compare, and the minimum comparisons allowed and stores the entire dictionary of computed comparisons (via adjusted cosine similarity) in the instance variable book_comparisons_. The method also saves the most similar items according to the given threshold in the instance variable similar_items_.
     def calculate_similarity_adjusted_cosine(self, users, book_title, items, min_comparisons):
+        if len(items) == 0:
+            return
         items = items[items != book_title]
         for i in items:
             v1, v2, ua = [], [], []
@@ -103,6 +107,25 @@ class PersonalizedCF(object):
                     predictions[user][book] = None
                     continue
                 predictions[user][book] = adder/denom
+        return predictions
+
+    def k_fold_predict(self, users):
+        predictions = defaultdict(dict)
+        for user, books in users.iteritems():
+            for book, v in books.iteritems():
+                if v == None:
+                    total, denom = 0.0, 0.0
+                    if not book in self.similar_items_:
+                        predictions[user][book] = None
+                        continue
+                    for book2, similarity in self.similar_items_[book].iteritems():
+                        if book2 in users[user] and users[user][book2] != None:
+                            total += users[user][book2] * similarity
+                            denom += similarity
+                    if denom == 0:
+                        predictions[user][book] = None
+                        continue
+                    predictions[user][book] = total/denom
         return predictions
 
     # top_n takes in a Series of a user containing isbns and their corresponding ratings and returns the n most similar items to all the items that a user has liked. To create the proper series, you can use the book_recommender_system library's user_id_to_series.

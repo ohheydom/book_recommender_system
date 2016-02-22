@@ -65,7 +65,7 @@ def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
         return 0
     return num/(math.sqrt(den1)*math.sqrt(den2))
 
-# Given a dict of users, this will split the users and their ratings according to the test size. It returns a tuple of dicts (X_train, X_test, y_test) where X_test contains users with two of their ratings set to None. y_test is a dict of users and their two actual rating values for their corresponding books. 
+# Given a dict of users, this will split the users and their ratings according to the test size. It returns a tuple of dicts (X_train, X_test, y_test) where X_test contains users with a percentage of their ratings set to None. y_test is a dict of users and their actual rating values for their corresponding books. 
 # {user : {'b1':'R', 'b2':'R'}, user2 : {'b1':'R', 'b2':R}}
 def train_test_split(dict_of_users, test_size=0.2, random_state=None):
     X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
@@ -74,7 +74,7 @@ def train_test_split(dict_of_users, test_size=0.2, random_state=None):
     for user, books in dict_of_users.iteritems():
         book_keys = books.keys()
         random.shuffle(book_keys)
-        test_n = int(len(books) * test_size) + 1
+        test_n = int(len(books) * test_size)
         idx = 0
         for key in book_keys:
             if idx < test_n:
@@ -93,4 +93,21 @@ def mean_absolute_error(y_test, y_pred):
             if not rating == None:
                 n += 1
                 total += abs(y_test[user][book] - y_pred[user][book])
-    return total/n
+    print n
+    return None if n == 0 else total/n
+
+def split_k_fold(ratings, kf, books_to_omit=4):
+    X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
+    keys = ratings.keys()
+    for i in kf[0]:
+        X_train[keys[i]] = ratings[keys[i]]
+    for j in kf[1]:
+        idx = 0
+        for k, v in ratings[keys[j]].iteritems():
+            if idx < books_to_omit:
+                X_test[keys[j]][k] = None
+                y_test[keys[j]][k] = v
+                idx += 1
+            else:
+                X_test[keys[j]][k] = v
+    return (X_train, X_test, y_test)

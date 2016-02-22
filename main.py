@@ -4,6 +4,7 @@ import book_recommender_system as brs
 import numpy as np
 import matplotlib.pyplot as plt
 import cPickle as pickle
+from sklearn.cross_validation import KFold
 
 # Load data
 #all_books = brs.load_book_data('book_data/BX-Books.csv')
@@ -14,30 +15,52 @@ rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
 # Preprocess
 
 # Set variables
-min_ratings = 4
-min_user_votes = 3
+min_book_ratings = 4
+min_user_ratings = 3
 min_comparisons = 2
 
 # Unfortunately, the amount of 0s in the dataset was heavily skewing the data. This removes all 0 values, which gives us about a third of the data to utilize
 rated_books = rated_books[rated_books['Book-Rating'] != 0]
 
-## The following function keeps only the books with greater than min_ratings
-rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_ratings)
+## The following function keeps only the books with greater than min_book_ratings
+rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_book_ratings)
 
-## Remove all ratings where a user voted on 2 or less books
-rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_votes)
+## The following function keeps only the users who rated min_user_ratings or greater books
+rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_ratings)
 
 
 # Personalized Collaborative Filtering
 
+# Train Test Split
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
-book_list, rating_list, user_means = brs.restructure_data(rated_books, True)
-X_train, X_test, y_test =  brs.train_test_split(rating_list, test_size=0.1, random_state=33)
-cf = pcf.PersonalizedCF(similarity='cosine')
-cf.fit(books=book_list, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
-pred = cf.predict(X_test)
-print brs.mean_absolute_error(y_test, pred)
+#book_users, user_ratings, user_means = brs.restructure_data(rated_books, True)
+#X_train, X_test, y_test =  brs.train_test_split(user_ratings, test_size=0.05, random_state=33)
+#cf = pcf.PersonalizedCF(similarity='cosine')
+#cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+#y_pred = cf.predict(X_test)
+#print brs.mean_absolute_error(y_test, y_pred)
 #pickle.dump(cf.similar_items_, open('similar_items.p', 'wb'))
+
+
+# K-Fold
+n_folds = 10
+total_error = 0.0
+book_users, user_ratings, user_means = brs.restructure_data(rated_books, True)
+kf = KFold(len(user_ratings), n_folds=n_folds, random_state=5)
+cf = pcf.PersonalizedCF(similarity='adjusted-cosine')
+for train_index, test_index in kf:
+    X_train, X_test, y_test = brs.split_k_fold(user_ratings, [train_index, test_index], 1)
+    cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+    y_pred = cf.k_fold_predict(X_test)
+    mae = brs.mean_absolute_error(y_test, y_pred)
+    total_error += mae
+    print mae
+
+print total_error/n_folds
+
+
+
+
 
 #saved_similar_items = pickle.load( open( "similar_items.p", "rb" ) )
 #cf = pcf.PersonalizedCF(ratings=rated_books, similar_items=saved_similar_items)
