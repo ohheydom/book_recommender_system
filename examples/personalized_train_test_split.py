@@ -10,7 +10,7 @@ rated_books = brs.load_rating_data('../book_data/BX-Book-Ratings.csv')
 # Preprocess
 
 # Set variables
-min_book_ratings = 4
+min_book_ratings = 2
 min_user_ratings = 3
 
 ## Unfortunately, the amount of 0s in the dataset was heavily skewing the data. This removes all 0 values, which gives us about a third of the data to utilize
@@ -27,10 +27,10 @@ rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x
 
 # Train Test Split
 
-min_comparisons = 4
+min_comparisons = 2
 book_users, user_ratings, user_means = brs.restructure_data(rated_books, True)
 X_train, X_test, y_test =  brs.train_test_split(user_ratings, test_size=0.2, random_state=0)
-cf = pcf.PersonalizedCF(similarity='adjusted-cosine')
+cf = pcf.PersonalizedCF(similarity='cosine', threshold=0.5)
 cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
 y_pred = cf.predict(X_test)
 print brs.mean_absolute_error(y_test, y_pred)

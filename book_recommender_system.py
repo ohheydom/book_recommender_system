@@ -4,8 +4,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 
-''' All data is located here: http://www2.informatik.uni-freiburg.de/~cziegler/BX/
-Download the files from there before running the following program.'''
+# All data is located here: http://www2.informatik.uni-freiburg.de/~cziegler/BX/
 
 # Load user-rating data from csv file
 def load_rating_data(location):
@@ -97,7 +96,6 @@ def mean_absolute_error(y_test, y_pred):
             if not rating == None:
                 n += 1
                 total += abs(y_test[user][book] - y_pred[user][book])
-    print n
     return None if n == 0 else total/n
 
 # split_k_fold takes in an input of a dict of users and their ratings of items as well as a 2 dimensional array, first item contains the training indices, second contains the test indices. Books to omit will be how many items in the test set to convert to None and test. This returns a tuple of X_train, X_test, and y_test label data.

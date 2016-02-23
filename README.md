@@ -1,32 +1,26 @@
-## Recommending Data from Book-Crossing Dataset
+## Book Recommender System
+
+### Recommending Data from Book-Crossing Dataset
 
 The Book-Crossing dataset is available [here](http://www2.informatik.uni-freiburg.de/~cziegler/BX/)
 
-This is an item-item Collaborative Filtering Model. It uses both personalized and non personalized collaborative filtering.
+This project is an item-item Collaborative Filtering Model. It uses both personalized and non personalized collaborative filtering.
 
 ### Personalized
+
 Weighs ratings of books to make recommendations based on similar items. Uses an item based collaborative filtering method and either cosine similarity or adjusted cosine similarity to determine similar items.
 
 ### Non-Personalized
-Considers top n highest rated books and makes recommendations of these books to a user according to what he/she hasn't yet rated.
+
+Considers top n highest rated books in the entire dataset and makes recommendations of these books to a user according to what he/she hasn't yet rated.
 
 ### Setup
 
-Please download the Book Crossing Dataset from the above website. Put all three files into the same directory as the python files. 
+Please download the Book Crossing Dataset from the above website. Load the files using the helper methods available in book_recommender_system.
 
 ### Usage
 
-For the Non-personalized Recommender System:
-
-```python non_personalized_cf.py```
-
-Or for the Personalized Recommender System:
-
-An example can be found in main.py
-
-```python main.py```
-
-#### Using the book recommender library:
+Please see examples in the examples folder.
 
 Given the book crossing dataset, first we need to load, preprocess, and convert to a dictionary:
 
@@ -46,6 +40,7 @@ book_users, user_ratings, user_means = brs.restructure_data(rated_books, means=T
 ```
 
 To perform K-Fold Cross Validation on the dataset:
+
 ```
 total_errors = 0.0
 books_to_omit = 2
@@ -59,11 +54,11 @@ for train_index, test_index in kf:
     cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
     y_pred = cf.k_fold_predict(X_test)
     mae = brs.mean_absolute_error(y_test, y_pred)
-    total_error_adj_cos += mae
+    total_errors += mae
 
     print "Adjusted cosine: ", mae
 
-print "Adjusted Cosine: ", total_error/n_folds
+print "Adjusted Cosine: ", total_errors/n_folds
 ```
 
 Performing tests on a train_test_split is even easier:
