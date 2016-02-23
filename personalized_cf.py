@@ -8,7 +8,7 @@ import book_recommender_system as brs
 class PersonalizedCF(object):
     def __init__(self, book_list=None, threshold=0.5, similarity='cosine', X_train={}):
         self.book_list_ = book_list
-        self.book_comparisons_ = defaultdict(dict) #pd.DataFrame() # DataFrame of all book_comparisons
+        self.book_comparisons_ = defaultdict(dict) # DataFrame of all book_comparisons
         self.similar_items_ = defaultdict(dict) # Dict of items mapped to their similar items and cosine similarity values
         self.threshold_ = threshold # Between 0 and 1. Items where the cosine similarity is greater than or equal to the threshold will be considered similar
         self.X_train_ = X_train # Training Data, only necessary if not fitting and you want to predict
@@ -109,6 +109,7 @@ class PersonalizedCF(object):
                 predictions[user][book] = adder/denom
         return predictions
 
+    # predict(users) takes an input of a dictionary with users mapped to item ids and ratings and n item ids mapped to None. Based on the fitted model, predict will calculate values for the empty ratings.
     def k_fold_predict(self, users):
         predictions = defaultdict(dict)
         for user, books in users.iteritems():

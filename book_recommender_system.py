@@ -7,20 +7,23 @@ import numpy as np
 ''' All data is located here: http://www2.informatik.uni-freiburg.de/~cziegler/BX/
 Download the files from there before running the following program.'''
 
-# Load book data from csv file
+# Load user-rating data from csv file
 def load_rating_data(location):
     book_list = pd.read_csv(location, sep=";", quotechar="\"", escapechar="\\")
     return book_list.set_index(['ISBN'])
 
+# Load book data from csv file
 def load_book_data(location):
     book_titles = pd.read_csv(location, sep=";", quotechar="\"", escapechar="\\")
     return book_titles.set_index(['ISBN'])
 
+# Get book titles from a DataFrame of book titles mapped to isbns and list of isbns
 def get_book_titles(book_titles, book_list):
     if type(book_titles) is str:
         return book_list[book_list.index == book_titles]['Book-Title']
     return book_list[book_list.index.isin(book_titles)]['Book-Title']
 
+# Given a user and a DataFrame of user-rating data, build a Series containing the user's isbns and ratings
 def user_id_to_series(user, ratings):
     user_rows = ratings[ratings['User-ID'] == user]
     user_series = pd.Series()
@@ -42,6 +45,7 @@ def restructure_data(ratings, means=False):
         return (books, user_ratings, user_means)
     return (books, user_ratings)
 
+# Calculate the cosine similarity between two items given two vectors of ratings
 def cosine_similarity(vec_1, vec_2):
     num, den1, den2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):
@@ -51,6 +55,7 @@ def cosine_similarity(vec_1, vec_2):
         den2 += v2**2
     return num/(math.sqrt(den1)*math.sqrt(den2))
 
+# Calculate the adjusted cosine similarity between two items given two vectors of ratings and the two users' averages
 def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
     num, den1, den2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):

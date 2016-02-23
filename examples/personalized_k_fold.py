@@ -44,5 +44,5 @@ for train_index, test_index in kf:
     y_pred = cf.k_fold_predict(X_test)
     mae = brs.mean_absolute_error(y_test, y_pred)
     total_error += mae
-    print "Adjusted cosine: ", mae_adj_cos
-print "Adjusted Cosine: ", total_error_adj_cos/n_folds
+    print "Adjusted cosine: ", mae
+print "Adjusted Cosine: ", total_error/n_folds
