@@ -24,7 +24,7 @@ Please see examples in the examples folder.
 
 Given the book crossing dataset, first we need to load, preprocess, and convert to a dictionary:
 
-```
+```python
 import personalized_cf as pcf
 import non_personalized_cf as npcf
 import book_recommender_system as brs
@@ -41,7 +41,7 @@ book_users, user_ratings, user_means = brs.restructure_data(rated_books, means=T
 
 To perform K-Fold Cross Validation on the dataset:
 
-```
+```python
 total_errors = 0.0
 books_to_omit = 2
 min_comparisons = 2
@@ -62,7 +62,7 @@ print "Adjusted Cosine: ", total_errors/n_folds
 ```
 
 Performing tests on a train_test_split is even easier:
-```
+```python
 X_train, X_test, y_test =  brs.train_test_split(user_ratings, test_size=0.2, random_state=0)
 cf = pcf.PersonalizedCF(similarity='adjusted-cosine')
 cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
