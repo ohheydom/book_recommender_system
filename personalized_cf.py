@@ -6,10 +6,10 @@ import book_recommender_system as brs
 
 # Personalized Item Based Collaborative Filtering
 class PersonalizedCF(object):
-    def __init__(self, book_list=None, similar_items=defaultdict(dict), threshold=0.5, similarity='cosine', X_train={}):
+    def __init__(self, book_list=None, threshold=0.5, similarity='cosine', X_train={}):
         self.book_list_ = book_list
         self.book_comparisons_ = defaultdict(dict) #pd.DataFrame() # DataFrame of all book_comparisons
-        self.similar_items_ = similar_items # Dict of items mapped to their similar items and cosine similarity values
+        self.similar_items_ = defaultdict(dict) # Dict of items mapped to their similar items and cosine similarity values
         self.threshold_ = threshold # Between 0 and 1. Items where the cosine similarity is greater than or equal to the threshold will be considered similar
         self.X_train_ = X_train # Training Data, only necessary if not fitting and you want to predict
         self.similarity_ = similarity  # Similarity function, either 'cosine' or 'adjusted_cosine'

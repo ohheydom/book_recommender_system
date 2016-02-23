@@ -22,10 +22,10 @@ def get_book_titles(book_titles, book_list):
     return book_list[book_list.index.isin(book_titles)]['Book-Title']
 
 def user_id_to_series(user, ratings):
-    user_rows = ratings[ratings.index == user]
+    user_rows = ratings[ratings['User-ID'] == user]
     user_series = pd.Series()
-    for _, row in user_rows.iterrows():
-        user_series[row['ISBN']] = row['Book-Rating']
+    for item_id, row in user_rows.iterrows():
+        user_series[item_id] = row['Book-Rating']
     return user_series
 
 # restructure_data returns a tuple containing a dict of books along with the users that rated it, and a dict of users and all their ratings, and if means=True, a dict of user's ratings means (for adjusted cosine similarity)
@@ -51,7 +51,6 @@ def cosine_similarity(vec_1, vec_2):
         den2 += v2**2
     return num/(math.sqrt(den1)*math.sqrt(den2))
 
-
 def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
     num, den1, den2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):
@@ -65,7 +64,7 @@ def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
         return 0
     return num/(math.sqrt(den1)*math.sqrt(den2))
 
-# Given a dict of users, this will split the users and their ratings according to the test size. It returns a tuple of dicts (X_train, X_test, y_test) where X_test contains users with a percentage of their ratings set to None. y_test is a dict of users and their actual rating values for their corresponding books. 
+# Given a dict of users, train_test_split will split the users and their ratings according to the test size. It returns a tuple of dicts (X_train, X_test, y_test) where X_test contains users with a percentage of their ratings set to None. y_test is a dict of users and their actual rating values for their corresponding books. 
 # {user : {'b1':'R', 'b2':'R'}, user2 : {'b1':'R', 'b2':R}}
 def train_test_split(dict_of_users, test_size=0.2, random_state=None):
     X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
@@ -96,6 +95,7 @@ def mean_absolute_error(y_test, y_pred):
     print n
     return None if n == 0 else total/n
 
+# split_k_fold takes in an input of a dict of users and their ratings of items as well as a 2 dimensional array, first item contains the training indices, second contains the test indices. Books to omit will be how many items in the test set to convert to None and test. This returns a tuple of X_train, X_test, and y_test label data.
 def split_k_fold(ratings, kf, books_to_omit=4):
     X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
     keys = ratings.keys()
