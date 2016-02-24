@@ -1,47 +1,68 @@
-## Book Recommender System
+# Book Recommender System
 
-### Recommending Data from Book-Crossing Dataset
+The Book Recommender System uses an item-item based Collaborative Filtering Model on the Book-Crossing Dataset to predict predict item ratings and recommend items based on similarity scores. It utilizes the Book-Crossing dataset, which is available [here](http://www2.informatik.uni-freiburg.de/~cziegler/BX/).
 
-The Book-Crossing dataset is available [here](http://www2.informatik.uni-freiburg.de/~cziegler/BX/)
+The recommender system can utilize both personalize and non-personalized models to suggest items.
 
-This project is an item-item Collaborative Filtering Model. It uses both personalized and non personalized collaborative filtering.
-
-### Personalized
+## Personalized
 
 Weighs ratings of books to make recommendations based on similar items. Uses an item based collaborative filtering method and either cosine similarity or adjusted cosine similarity to determine similar items.
 
-### Non-Personalized
+## Non-Personalized
 
 Considers top n highest rated books in the entire dataset and makes recommendations of these books to a user according to what he/she hasn't yet rated.
 
-### Setup
+## Setup
 
 Please download the Book Crossing Dataset from the above website. Load the files using the helper methods available in book_recommender_system.
 
-### Usage
+## Usage
 
-Please see examples in the examples folder.
-
-Given the book crossing dataset, first we need to load, preprocess, and convert to a dictionary:
+### Load, Preprocess, Convert DataFrame to python Dictionaries
 
 ```python
 import personalized_cf as pcf
 import non_personalized_cf as npcf
 import book_recommender_system as brs
-from sklearn.cross_validation import KFold
 
+# Load
 rated_books = brs.load_rating_data('book_data/BX-Book-Ratings.csv')
+
+# Preprocess
 min_book_ratings = 2
 min_user_ratings = 3
 rated_books = rated_books[rated_books['Book-Rating'] != 0]
 rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_book_ratings)
 rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_ratings)
+
+# Convert to two dictionary files. `user_means` dictionary is only required if using the adjusted cosine similarity function.
 book_users, user_ratings, user_means = brs.restructure_data(rated_books, means=True)
 ```
 
-To perform K-Fold Cross Validation on the dataset:
+### Fit the data
 
 ```python
+min_comparisons = 2 # Number of times two items must be compared before a similarity value can be calculated
+cf = pcf.PersonalizedCF(similarity='adjusted-cosine', threshold=0.5)
+cf.fit(books=book_users, ratings=user_ratings, min_comparisons=min_comparisons, means=user_means)
+```
+
+### Predict
+
+```python
+user = brs.user_id_to_series(USER_ID, rated_books) # Parse a user (as an integer value) from the original pandas DataFrame to a pandas Series
+cf.predict_item(user, 'ITEM_ID')
+```
+
+Please see the examples folder for more examples.
+
+## Testing
+
+### K-Fold Cross Validation
+
+```python
+from sklearn.cross_validation import KFold
+
 total_errors = 0.0
 books_to_omit = 2
 min_comparisons = 2
@@ -61,7 +82,8 @@ for train_index, test_index in kf:
 print "Adjusted Cosine: ", total_errors/n_folds
 ```
 
-Performing tests on a train_test_split is even easier:
+### Train_Test_Split
+
 ```python
 X_train, X_test, y_test =  brs.train_test_split(user_ratings, test_size=0.2, random_state=0)
 cf = pcf.PersonalizedCF(similarity='adjusted-cosine')
