@@ -1,11 +1,11 @@
 import sys
 sys.path.append("..")
 import personalized_cf as pcf
-import book_recommender_system as brs
+import recommender_system as rs
 from sklearn.cross_validation import KFold
 
 # Load data
-rated_books = brs.load_rating_data('../book_data/BX-Book-Ratings.csv')
+rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN')
 
 # Preprocess
 
@@ -25,9 +25,9 @@ rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x
 # Train Test Split
 
 min_comparisons = 2
-book_users, user_ratings, user_means = brs.restructure_data(rated_books, True)
-X_train, X_test, y_test =  brs.train_test_split(user_ratings, test_size=0.2, random_state=0)
+book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID', 'Book-Rating', True)
+X_train, X_test, y_test =  rs.train_test_split(user_ratings, test_size=0.2, random_state=0)
 cf = pcf.PersonalizedCF(similarity='cosine', threshold=0.5)
-cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
 y_pred = cf.predict(X_test)
-print brs.mean_absolute_error(y_test, y_pred)
+print rs.mean_absolute_error(y_test, y_pred)

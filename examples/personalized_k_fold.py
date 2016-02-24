@@ -2,14 +2,14 @@ import sys
 sys.path.append("..")
 import personalized_cf as pcf
 import non_personalized_cf as npcf
-import book_recommender_system as brs
+import recommender_system as rs
 import numpy as np
 import matplotlib.pyplot as plt
 import cPickle as pickle
 from sklearn.cross_validation import KFold
 
 # Load data
-rated_books = brs.load_rating_data('../book_data/BX-Book-Ratings.csv')
+rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN')
 
 # Preprocess
 
@@ -32,15 +32,15 @@ n_folds = 10
 total_error = 0.0
 books_to_omit = 2
 min_comparisons = 2
-book_users, user_ratings, user_means = brs.restructure_data(rated_books, True)
+book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID', 'Book-Rating', True)
 kf = KFold(len(user_ratings), n_folds=n_folds, random_state=5)
 
 for train_index, test_index in kf:
-    X_train, X_test, y_test = brs.split_k_fold(user_ratings, [train_index, test_index], books_to_omit)
+    X_train, X_test, y_test = rs.split_k_fold(user_ratings, [train_index, test_index], books_to_omit)
     cf = pcf.PersonalizedCF(similarity='adjusted-cosine', threshold=0.5)
-    cf.fit(books=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+    cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
     y_pred = cf.k_fold_predict(X_test)
-    mae = brs.mean_absolute_error(y_test, y_pred)
+    mae = rs.mean_absolute_error(y_test, y_pred)
     total_error += mae
     print "Adjusted cosine: ", mae
 print "Adjusted Cosine: ", total_error/n_folds

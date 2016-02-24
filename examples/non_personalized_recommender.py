@@ -2,15 +2,15 @@ import sys
 sys.path.append("..")
 import personalized_cf as pcf
 import non_personalized_cf as npcf
-import book_recommender_system as brs
+import recommender_system as rs
 import numpy as np
 import matplotlib.pyplot as plt
 import cPickle as pickle
 from sklearn.cross_validation import KFold
 
 # Load data
-rated_books = brs.load_rating_data('../book_data/BX-Book-Ratings.csv')
-all_books = brs.load_book_data('../book_data/BX-Books.csv')
+rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN')
+all_books = rs.load_item_data('../book_data/BX-Books.csv', 'ISBN')
 
 # Preprocess
 
@@ -32,10 +32,10 @@ rater_list = rated_books['User-ID'].value_counts()[:10]
 
 # Find the highested rated books
 ncf = npcf.NonPersonalizedCF(rated_books, all_books)
-top_books = ncf.highest_rated_books(n=50, min_rating=8, max_rating=10)
+top_books = ncf.highest_rated_items(n=50, min_rating=8, max_rating=10, rating_column_name='Book-Rating')
 
 # Select the user with the most ratings
 user = rated_books[rated_books['User-ID'] == np.asarray(rater_list.axes).tolist()[0][0]]
 
 # Print the top books that the user hasn't rated
-print ncf.recommend_books(user, top_books)
+print ncf.recommend_items(user, top_books, 'Book-Title')

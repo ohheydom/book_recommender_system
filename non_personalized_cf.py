@@ -1,24 +1,24 @@
-import book_recommender_system as brs
+import recommender_system as rs
 import numpy as np
 import pandas as pd
 
 # Non-Personalized Item Based Collaborative Filtering
-# Finds the top n books with the highest ratings and will recommend these books to a specific user depending on what he/she has rated.
-# Does not take into account the specifics of user ratings, only that the user has rated and read the book.
+# Finds the top n items with the highest ratings and will recommend these items to a specific user depending on what he/she has rated.
+# Does not take into account the specifics of user ratings, only that the user has rated the item.
 class NonPersonalizedCF(object):
-    def __init__(self, ratings, book_list=pd.DataFrame()):
+    def __init__(self, ratings, item_list=pd.DataFrame()):
         self.ratings_ = ratings
-        self.book_list_ = book_list
+        self.item_list_ = item_list
 
-    # Returns a DataFrame of recommended books based on the top rated books that the user has not seen
-    def recommend_books(self, user, top_books):
-        l = list(set(top_books) - set(user.index.values))
+    # Returns a DataFrame of recommended items based on the top rated items that the user has not rated
+    def recommend_items(self, user, top_items, item_title_column_name):
+        l = list(set(top_items) - set(user.index.values))
         print l
-        if len(self.book_list_) == 0:
+        if len(self.item_list_) == 0:
             return l
-        return brs.get_book_titles(l, self.book_list_)
+        return rs.get_item_titles(l, self.item_list_, item_title_column_name)
 
-    # Returns a Pandas index of the top n rated books
-    def highest_rated_books(self, n=50, min_rating=8, max_rating=10):
-        b = self.ratings_[self.ratings_['Book-Rating'].isin(np.arange(min_rating, max_rating+1))]
+    # Returns a Pandas index of the top n rated items
+    def highest_rated_items(self, n=50, min_rating=8, max_rating=10, rating_column_name='Rating'):
+        b = self.ratings_[self.ratings_[rating_column_name].isin(np.arange(min_rating, max_rating+1))]
         return b.index.value_counts()[:n].axes[0]
