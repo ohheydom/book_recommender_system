@@ -24,7 +24,6 @@ Please download the Book Crossing Dataset from the above website. Load the files
 
 ```python
 import personalized_cf as pcf
-import non_personalized_cf as npcf
 import recommender_system as rs
 
 # Load
@@ -75,11 +74,11 @@ n_folds = 10
 kf = KFold(len(user_ratings), n_folds=n_folds, random_state=0)
 
 for train_index, test_index in kf:
-    X_train, X_test, y_test = brs.split_k_fold(user_ratings, [train_index, test_index], books_to_omit)
+    X_train, X_test, y_test = rs.split_k_fold(user_ratings, [train_index, test_index], books_to_omit)
     cf = pcf.PersonalizedCF(similarity='adjusted-cosine', threshold=0.5)
     cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
     y_pred = cf.k_fold_predict(X_test)
-    total_errors += brs.mean_absolute_error(y_test, y_pred)
+    total_errors += rs.mean_absolute_error(y_test, y_pred)
 
 print "Adjusted Cosine: ", total_errors/n_folds
 ```
@@ -87,9 +86,9 @@ print "Adjusted Cosine: ", total_errors/n_folds
 ### Train_Test_Split
 
 ```python
-X_train, X_test, y_test =  brs.train_test_split(user_ratings, test_size=0.2, random_state=0)
+X_train, X_test, y_test =  rs.train_test_split(user_ratings, test_size=0.2, random_state=0)
 cf = pcf.PersonalizedCF(similarity='adjusted-cosine')
 cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
 y_pred = cf.predict(X_test)
-print brs.mean_absolute_error(y_test, y_pred)
+print rs.mean_absolute_error(y_test, y_pred)
 ```

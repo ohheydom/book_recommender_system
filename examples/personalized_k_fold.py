@@ -1,11 +1,7 @@
 import sys
 sys.path.append("..")
 import personalized_cf as pcf
-import non_personalized_cf as npcf
 import recommender_system as rs
-import numpy as np
-import matplotlib.pyplot as plt
-import cPickle as pickle
 from sklearn.cross_validation import KFold
 
 # Load data
