@@ -47,7 +47,7 @@ book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID
 # Number of times two items must be compared before a similarity value can be calculated
 min_comparisons = 2
 cf = pcf.PersonalizedCF(similarity='adjusted-cosine', threshold=0.5)
-cf.fit(items=book_users, ratings=user_ratings, min_comparisons=min_comparisons, means=user_means)
+cf.fit(items=book_users, users_ratings=user_ratings, min_comparisons=min_comparisons, means=user_means)
 ```
 
 ### Predict
@@ -76,7 +76,7 @@ kf = KFold(len(user_ratings), n_folds=n_folds, random_state=0)
 for train_index, test_index in kf:
     X_train, X_test, y_test = rs.split_k_fold(user_ratings, [train_index, test_index], books_to_omit)
     cf = pcf.PersonalizedCF(similarity='adjusted-cosine', threshold=0.5)
-    cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+    cf.fit(items=book_users, users_ratings=X_train, min_comparisons=min_comparisons, means=user_means)
     y_pred = cf.k_fold_predict(X_test)
     total_errors += rs.mean_absolute_error(y_test, y_pred)
 
@@ -88,7 +88,7 @@ print "Adjusted Cosine: ", total_errors/n_folds
 ```python
 X_train, X_test, y_test =  rs.train_test_split(user_ratings, test_size=0.2, random_state=0)
 cf = pcf.PersonalizedCF(similarity='adjusted-cosine')
-cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+cf.fit(items=book_users, users_ratings=X_train, min_comparisons=min_comparisons, means=user_means)
 y_pred = cf.predict(X_test)
 print rs.mean_absolute_error(y_test, y_pred)
 ```

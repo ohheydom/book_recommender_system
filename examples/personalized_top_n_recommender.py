@@ -25,5 +25,5 @@ rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x
 user = rs.user_id_to_series(276680, rated_books, 'User-ID', 'Book-Rating')
 cf = pcf.PersonalizedCF()
 book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID', 'Book-Rating', True)
-cf.fit(items=book_users, ratings=user_ratings, min_comparisons=4, means=user_means)
+cf.fit(items=book_users, users_ratings=user_ratings, min_comparisons=4, means=user_means)
 print cf.top_n(user, 50)

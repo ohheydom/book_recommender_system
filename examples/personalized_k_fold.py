@@ -34,7 +34,7 @@ kf = KFold(len(user_ratings), n_folds=n_folds, random_state=5)
 for train_index, test_index in kf:
     X_train, X_test, y_test = rs.split_k_fold(user_ratings, [train_index, test_index], books_to_omit)
     cf = pcf.PersonalizedCF(similarity='adjusted-cosine', threshold=0.5)
-    cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons, means=user_means)
+    cf.fit(items=book_users, users_ratings=X_train, min_comparisons=min_comparisons, means=user_means)
     y_pred = cf.k_fold_predict(X_test)
     mae = rs.mean_absolute_error(y_test, y_pred)
     total_error += mae

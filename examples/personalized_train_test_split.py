@@ -27,6 +27,6 @@ min_comparisons = 2
 book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID', 'Book-Rating', True)
 X_train, X_test, y_test =  rs.train_test_split(user_ratings, test_size=0.2, random_state=0)
 cf = pcf.PersonalizedCF(similarity='cosine', threshold=0.5)
-cf.fit(items=book_users, ratings=X_train, min_comparisons=min_comparisons)
+cf.fit(items=book_users, users_ratings=X_train, min_comparisons=min_comparisons)
 y_pred = cf.predict(X_test)
 print rs.mean_absolute_error(y_test, y_pred)
