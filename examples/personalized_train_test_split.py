@@ -28,4 +28,4 @@ X_train, X_test, y_test =  rs.train_test_split(user_ratings, test_size=0.2, rand
 cf = pcf.PersonalizedCF(similarity='cosine', threshold=0.5)
 cf.fit(items=book_users, users_ratings=X_train, min_comparisons=min_comparisons)
 y_pred = cf.predict(X_test)
-print rs.mean_absolute_error(y_test, y_pred)
+print "Mean Absolute Error: %f" % rs.mean_absolute_error(y_test, y_pred)

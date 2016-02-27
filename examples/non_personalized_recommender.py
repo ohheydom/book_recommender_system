@@ -5,13 +5,13 @@ import recommender_system as rs
 import numpy as np
 
 # Load data
-rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN')
+rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN', 'User-ID')
 all_books = rs.load_item_data('../book_data/BX-Books.csv', 'ISBN')
 
 # Preprocess
 
 # Set variables
-min_book_ratings = 4
+min_book_ratings = 16
 min_user_ratings = 3
 
 # Unfortunately, the amount of 0s in the dataset was heavily skewing the data. This removes all 0 values, which gives us about a third of the data to utilize
@@ -31,10 +31,10 @@ ncf = npcf.NonPersonalizedCF(rated_books, all_books)
 top_books = ncf.highest_rated_items(n=50, min_rating=8, max_rating=10, rating_column_name='Book-Rating')
 
 # Select the user with the most ratings
-# user = rated_books[rated_books['User-ID'] == np.asarray(rater_list.axes).tolist()[0][0]]
+#user = rated_books[rated_books['User-ID'] == np.asarray(rater_list.axes).tolist()[0][0]]
 
 # Or convert a user into a pandas Series
-user = rs.user_id_to_series(276680, rated_books, 'User-ID', 'Book-Rating')
+user = rs.user_id_to_series('276680', rated_books, 'User-ID', 'Book-Rating')
 
 # Print the top books that the user hasn't rated
 print ncf.recommend_items(user, top_books, 'Book-Title')

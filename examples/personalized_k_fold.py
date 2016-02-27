@@ -37,5 +37,5 @@ for train_index, test_index in kf:
     y_pred = cf.k_fold_predict(X_test)
     mae = rs.mean_absolute_error(y_test, y_pred)
     total_error += mae
-    print "Adjusted cosine: ", mae
-print "Adjusted Cosine: ", total_error/n_folds
+    print "Current Mean Absolute Error: ", mae
+print "Overall Mean Absolute Error: ", total_error/n_folds

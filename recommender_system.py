@@ -4,7 +4,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 
-def load_item_data(location, index):
+def load_item_data(location, index, user_column_name=None):
     """Loads user-rating data from csv file
 
     Parameters
@@ -13,6 +13,9 @@ def load_item_data(location, index):
         Location of the csv file
     index : str
         Column to be used as the index
+    user_column_name : str
+        Column name of the user id column. If left blank, user column name type
+        will be implied from dataset
 
 
     Returns
@@ -20,7 +23,8 @@ def load_item_data(location, index):
     pandas DataFrame
         A DataFrame of the csv file with the index set to specified column name
     """
-    return pd.read_csv(location, sep=";", quotechar="\"", escapechar="\\").set_index(index)
+    dtype = {user_column_name: str} if user_column_name else None
+    return pd.read_csv(location, dtype=dtype, sep=";", quotechar="\"", escapechar="\\").set_index(index)
 
 def get_item_titles(item_ids, item_list, item_title_column_name):
     """Retrieves the titles of items

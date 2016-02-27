@@ -27,7 +27,7 @@ import personalized_cf as pcf
 import recommender_system as rs
 
 # Load
-rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN')
+rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN', 'User-ID')
 
 # Preprocess
 min_book_ratings = 2
@@ -53,7 +53,7 @@ cf.fit(items=book_users, users_ratings=user_ratings, min_comparisons=min_compari
 ### Predict
 
 ```python
-# Parse a user (as an integer value) from the original pandas DataFrame to a pandas Series
+# Parse a user (as a string value) from the original pandas DataFrame to a pandas Series
 user = rs.user_id_to_series(USER_ID, rated_books, 'User-ID', 'Book-Rating')
 cf.predict_item(user, 'ITEM_ID')
 ```
