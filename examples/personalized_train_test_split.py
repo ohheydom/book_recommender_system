@@ -22,7 +22,6 @@ rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= 
 rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_ratings)
 
 # Train Test Split
-
 min_comparisons = 2
 book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID', 'Book-Rating', True)
 X_train, X_test, y_test =  rs.train_test_split(user_ratings, test_size=0.2, random_state=0)

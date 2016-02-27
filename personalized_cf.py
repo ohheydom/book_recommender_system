@@ -1,6 +1,5 @@
 import itertools
 from collections import defaultdict
-import pandas as pd
 import numpy as np
 import recommender_system as rs
 
@@ -188,7 +187,8 @@ class PersonalizedCF(object):
 
         Returns
         -------
-        Predicted rating. Returns None if item rating is non calculable
+        float
+            Predicted rating. Returns None if item rating is non calculable
         """
         if not item in self.similar_items_:
             return None
@@ -236,7 +236,7 @@ class PersonalizedCF(object):
 
     def k_fold_predict(self, users_ratings):
         """Predicts the values that users would rate items. Used when testing
-        split includes all a user's items, including the rated items and the
+        split includes all users' items, including the rated items and the
         items that were switched to None for testing purposes.
 
         Parameters

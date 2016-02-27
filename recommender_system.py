@@ -37,7 +37,7 @@ def get_item_titles(item_ids, item_list, item_title_column_name):
 
     Returns
     -------
-    item_list : array
+    item_list : pandas Series
         A list of item titles corresponding to item ids
     """
     if type(item_ids) is str:
@@ -46,7 +46,7 @@ def get_item_titles(item_ids, item_list, item_title_column_name):
 
 def user_id_to_series(user, ratings, user_column_name, rating_column_name):
     """Builds a pandas Series of a single user from a pandas DataFrame of
-    multiple users and ratings
+    multiple users and ratings of items
 
     Parameters
     ----------

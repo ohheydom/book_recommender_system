@@ -39,7 +39,6 @@ class NonPersonalizedCF(object):
             A list of item titles that the user has not rated
         """
         l = list(set(top_items) - set(user_series.index.values))
-        print l
         if len(self.item_list) == 0:
             return l
         return rs.get_item_titles(l, self.item_list, item_title_column_name)

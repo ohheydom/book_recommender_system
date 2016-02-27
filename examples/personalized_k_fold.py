@@ -23,7 +23,6 @@ rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= 
 rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_ratings)
 
 # K-Fold Cross Validation
-
 n_folds = 10
 total_error = 0.0
 books_to_omit = 2
