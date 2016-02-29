@@ -17,7 +17,6 @@ def load_item_data(location, index, user_column_name=None):
         Column name of the user id column. If left blank, user column name type
         will be implied from dataset
 
-
     Returns
     -------
     pandas DataFrame
@@ -37,7 +36,6 @@ def get_item_titles(item_ids, item_list, item_title_column_name):
         DataFrame of item ids mapped to item titles
     item_title_column_name : str
         Column name of the item title column
-
 
     Returns
     -------
@@ -62,7 +60,6 @@ def user_id_to_series(user, ratings, user_column_name, rating_column_name):
         Column name of the user id column
     rating_column_name : str
         Column name of the rating column
-
 
     Returns
     -------
@@ -89,7 +86,6 @@ def restructure_data(ratings, user_column_name, rating_column_name, means=False)
     means : bool
         Whether to return a dict of all the users' ratings means. Used for adjusted
         cosine similarity
-
 
     Returns
     -------
@@ -129,13 +125,13 @@ def cosine_similarity(vec_1, vec_2):
     Float
         Value between 0 and 1 corresponding to the similarity between two items
     """
-    num, den1, den2 = 0.0, 0.0, 0.0
+    num, d1, d2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):
         v1, v2 = vec_1[i], vec_2[i]
         num += v1 * v2
-        den1 += v1**2
-        den2 += v2**2
-    return num/(math.sqrt(den1)*math.sqrt(den2))
+        d1 += v1**2
+        d2 += v2**2
+    return 0 if d1 == 0 or d2 == 0 else num/(math.sqrt(d1)*math.sqrt(d2))
 
 def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
     """Calculates the adjusted cosine similarity between two vectors
@@ -156,17 +152,15 @@ def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
     Float
         Value between -1 and 1 corresponding to the similarity between two items
     """
-    num, den1, den2 = 0.0, 0.0, 0.0
+    num, d1, d2 = 0.0, 0.0, 0.0
     for i, _ in enumerate(vec_1):
         ua = user_averages[i]
-        val1 = vec_1[i] - ua
-        val2 = vec_2[i] - ua
-        num += val1 * val2
-        den1 += val1**2
-        den2 += val2**2
-    if den1 == 0 or den2 == 0:
-        return 0
-    return num/(math.sqrt(den1)*math.sqrt(den2))
+        v1 = vec_1[i] - ua
+        v2 = vec_2[i] - ua
+        num += v1 * v2
+        d1 += v1**2
+        d2 += v2**2
+    return 0 if d1 == 0 or d2 == 0 else num/(math.sqrt(d1)*math.sqrt(d2))
 
 def train_test_split(users_ratings, test_size=0.2, random_state=None):
     """Splits data into training and testing datasets.

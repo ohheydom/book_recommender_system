@@ -23,7 +23,6 @@ class PersonalizedCF(object):
 
     Attributes
     ----------
-
     X_train_ : dict
         Each user mapped to each item he/she rated and the actual rating
     item_comparisons_ : defaultdict
@@ -197,9 +196,7 @@ class PersonalizedCF(object):
             if item in user_series:
                 total += user_series[item] * similarity
                 denom += similarity
-        if denom == 0:
-            return None
-        return total/denom
+        return None if denom == 0 else total/denom
 
     def predict(self, users_ratings):
         """Predicts the values that users would rate items. Used when testing
@@ -290,7 +287,6 @@ class PersonalizedCF(object):
             for k in self.similar_items_[item].keys():
                 if not k in user_series:
                     sim_items.append(k)
-
         sim_items = np.unique(sim_items)
         n_sim_items = len(sim_items)
         n = n_sim_items if n_sim_items < n else n
