@@ -1,4 +1,5 @@
 import itertools
+import random
 from collections import defaultdict
 import numpy as np
 import recommender_system as rs
@@ -288,6 +289,7 @@ class PersonalizedCF(object):
                 if not k in user_series:
                     sim_items.append(k)
         sim_items = np.unique(sim_items)
+        random.shuffle(sim_items)
         n_sim_items = len(sim_items)
         n = n_sim_items if n_sim_items < n else n
         return sim_items[:n]

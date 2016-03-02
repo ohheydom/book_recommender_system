@@ -33,6 +33,9 @@ user['0316693642'] = 8 # Along Came A Spider
 user['0553264850'] = 8 # Red Dragon
 user['0451160444'] = 7 # Christine
 user['0451160444'] = 8 # Needful Things
+user['0140039589'] = 10 # Watership Down
+user['0553275976'] = 8 # Bonfire of the Vanities
+user['1573225517'] = 8 # High Fidelity
 
 # Top n
 cf = pcf.PersonalizedCF()
@@ -63,5 +66,5 @@ ISBN                                                Book-Title
 0451161351                                                 Cujo
 0451170385                                   Four Past Midnight
 
-Predicted rating for Carrie: 7.50
+Predicted rating for Carrie :  7.49757227281
 """
