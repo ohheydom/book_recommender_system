@@ -2,11 +2,12 @@ import recommender_system as rs
 import numpy as np
 import pandas as pd
 
+
 class NonPersonalizedCF(object):
     """Non-Personalized Collaborative Filtering
     Finds the top n items with the highest ratings and will recommend these
     items to a specific user depending on what he/she has rated. Does not take
-    into account the specifics of user ratings, only that the user has rated 
+    into account the specifics of user ratings, only that the user has rated
     the item.
 
     Parameters
@@ -27,7 +28,8 @@ class NonPersonalizedCF(object):
         Parameters
         ----------
         user_series : pandas Series
-            A pandas series containing item ids mapped to ratings for a single user
+            A pandas series containing item ids mapped to ratings for
+            a single user
         top_items : array
             A list of the top rated items
         item_title_column_name : str
@@ -43,7 +45,8 @@ class NonPersonalizedCF(object):
             return l
         return rs.get_item_titles(l, self.item_list, item_title_column_name)
 
-    def highest_rated_items(self, n=50, min_rating=8, max_rating=10, rating_column_name='Rating'):
+    def highest_rated_items(self, n=50, min_rating=8, max_rating=10,
+                            rating_column_name='Rating'):
         """Returns an array of of n highest rated items
 
         Parameters
@@ -62,5 +65,7 @@ class NonPersonalizedCF(object):
         Array
             An array of n top rated item ids
         """
-        b = self.users_ratings[self.users_ratings[rating_column_name].isin(np.arange(min_rating, max_rating+1))]
+        idx = self.users_ratings[rating_column_name].isin(np.arange(min_rating, max_rating+1))
+        b = self.users_ratings[idx]
         return b.index.value_counts()[:n].axes[0]
+

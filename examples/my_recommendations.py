@@ -4,8 +4,10 @@ import personalized_cf as pcf
 import recommender_system as rs
 import pandas as pd
 
+
 # Load data
-rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN', 'User-ID')
+rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN',
+                                'User-ID')
 all_books = rs.load_item_data('../book_data/BX-Books.csv', 'ISBN')
 
 # Preprocess
@@ -14,13 +16,15 @@ all_books = rs.load_item_data('../book_data/BX-Books.csv', 'ISBN')
 min_book_ratings = 8
 min_user_ratings = 8
 
-# Unfortunately, the amount of 0s in the dataset was heavily skewing the data. This removes all 0 values, which gives us about a third of the data to utilize
+# Unfortunately, the amount of 0s in the dataset was heavily skewing the data.
+# This removes all 0 values, which gives us about a third of the data to utilize
 rated_books = rated_books[rated_books['Book-Rating'] != 0]
 
 # The following function keeps only the books with greater than min_book_ratings
 rated_books = rated_books.groupby(rated_books.index).filter(lambda x: len(x) >= min_book_ratings)
 
-# The following function keeps only the users who rated min_user_ratings or greater books
+# The following function keeps only the users who rated min_user_ratings or
+# greater books
 rated_books = rated_books.groupby(rated_books['User-ID']).filter(lambda x: len(x) >= min_user_ratings)
 
 # My ratings
@@ -39,12 +43,16 @@ user['1573225517'] = 8 # High Fidelity
 
 # Top n
 cf = pcf.PersonalizedCF()
-book_users, user_ratings, user_means = rs.restructure_data(rated_books, 'User-ID', 'Book-Rating', True)
-cf.fit(items=book_users, users_ratings=user_ratings, min_comparisons=4, means=user_means)
+book_users, user_ratings, user_means = rs.restructure_data(rated_books,
+                                                           'User-ID',
+                                                           'Book-Rating',
+                                                           True)
+cf.fit(items=book_users, users_ratings=user_ratings, min_comparisons=4,
+       means=user_means)
 recommendations = cf.top_n(user, 20)
 print rs.get_item_titles(recommendations, all_books, 'Book-Title')
 
-#What would I think of Carrie??
+# What would I think of Carrie??
 print "Predicted rating for Carrie : ", cf.predict_item(user, '0671039725')
 
 """ Responses
@@ -68,3 +76,4 @@ ISBN                                                Book-Title
 
 Predicted rating for Carrie :  7.49757227281
 """
+

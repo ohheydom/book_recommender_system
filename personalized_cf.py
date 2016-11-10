@@ -4,10 +4,11 @@ from collections import defaultdict
 import numpy as np
 import recommender_system as rs
 
+
 class PersonalizedCF(object):
     """Personalized Item Based Collaborative Filtering
-    Weighs ratings of items to make recommendations based on similar items. 
-    Uses an item based collaborative filtering method and either cosine 
+    Weighs ratings of items to make recommendations based on similar items.
+    Uses an item based collaborative filtering method and either cosine
     similarity or adjusted cosine similarity to determine similar items.
 
     Parameters
@@ -91,14 +92,18 @@ class PersonalizedCF(object):
                 temp_users[user] = users_ratings[user]
                 items.append(users_ratings[user].keys())
             if self.similarity == 'adjusted-cosine':
-                self.calculate_similarity_adjusted_cosine(temp_users, item, np.unique(list(itertools.chain(*items))), min_comparisons)
+                self.calculate_sim_adj_cos(temp_users, item,
+                                           np.unique(list(itertools.chain(*items))),
+                                           min_comparisons)
             else:
-                self.calculate_similarity(temp_users, item, np.unique(list(itertools.chain(*items))), min_comparisons)
+                self.calculate_sim(temp_users, item,
+                                   np.unique(list(itertools.chain(*items))),
+                                   min_comparisons)
         return self
 
-    def calculate_similarity(self, users_ratings, item_id, items, min_comparisons):
+    def calculate_sim(self, users_ratings, item_id, items, min_comparisons):
         """Calculates the cosine similarities of all comparable items to the
-        given item and saves the values into item_comparisons_. Also saves 
+        given item and saves the values into item_comparisons_. Also saves
         values into similar_items_ if items are similar according to threshold.
 
         Parameters
@@ -135,7 +140,7 @@ class PersonalizedCF(object):
                     self.similar_items_[item_id][i] = val
         return self
 
-    def calculate_similarity_adjusted_cosine(self, users_ratings, item_id, items, min_comparisons):
+    def calculate_sim_adj_cos(self, users_ratings, item_id, items, min_comparisons):
         """Calculates the adjusted cosine similarities of all comparable items
         to the given item and saves the values into item_comparisons_. Also saves
         values into similar_items_ if items are similar according to threshold.
@@ -181,7 +186,8 @@ class PersonalizedCF(object):
         Parameters
         ----------
         user_series : pandas Series
-            A pandas series containing item ids mapped to ratings for a single user
+            A pandas series containing item ids mapped to ratings for a
+            single user
         item : str
             Item to predict
 
@@ -190,7 +196,7 @@ class PersonalizedCF(object):
         float
             Predicted rating. Returns None if item rating is non calculable
         """
-        if not item in self.similar_items_:
+        if item not in self.similar_items_:
             return None
         total, denom = 0.0, 0.0
         for item, similarity in self.similar_items_[item].iteritems():
@@ -205,13 +211,13 @@ class PersonalizedCF(object):
 
         Parameters
         ----------
-        users_ratings : 
+        users_ratings :
             Each user mapped to items with None values
 
         Returns
         -------
         predictions : defaultdict
-            Users mapped to items from the users_ratings dict and their 
+            Users mapped to items from the users_ratings dict and their
             corresponding predicted ratings, if calculable. If not calculable,
             returns None for specific item/item comparison
         """
@@ -219,7 +225,7 @@ class PersonalizedCF(object):
         for user, items in users_ratings.iteritems():
             for item, _ in items.iteritems():
                 total, denom = 0.0, 0.0
-                if not item in self.similar_items_:
+                if item not in self.similar_items_:
                     predictions[user][item] = None
                     continue
                 for item2, similarity in self.similar_items_[item].iteritems():
@@ -253,9 +259,9 @@ class PersonalizedCF(object):
         predictions = defaultdict(dict)
         for user, items in users_ratings.iteritems():
             for item, v in items.iteritems():
-                if v == None:
+                if v is None:
                     total, denom = 0.0, 0.0
-                    if not item in self.similar_items_:
+                    if item not in self.similar_items_:
                         predictions[user][item] = None
                         continue
                     for item2, similarity in self.similar_items_[item].iteritems():
@@ -274,22 +280,25 @@ class PersonalizedCF(object):
         Parameters
         ----------
         user_series : pandas Series
-            A pandas series containing item ids mapped to ratings for a single user
+            A pandas series containing item ids mapped to ratings for a single
+            user
         n : int
             Number of top n similar items to return
 
         Returns
         -------
         sim_items : array
-            n items that compare favorably to the given user's highly rated items
+            n items that compare favorably to the given user's highly rated
+            items
         """
         sim_items = []
         for item, rating in user_series.iteritems():
             for k in self.similar_items_[item].keys():
-                if not k in user_series:
+                if k not in user_series:
                     sim_items.append(k)
         sim_items = np.unique(sim_items)
         random.shuffle(sim_items)
         n_sim_items = len(sim_items)
         n = n_sim_items if n_sim_items < n else n
         return sim_items[:n]
+

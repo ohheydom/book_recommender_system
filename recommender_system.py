@@ -1,8 +1,9 @@
 import random
 import math
-from collections import defaultdict
+from collections import defaultdict as dd
 import pandas as pd
 import numpy as np
+
 
 def load_item_data(location, index, user_column_name=None):
     """Loads user-rating data from csv file
@@ -23,7 +24,9 @@ def load_item_data(location, index, user_column_name=None):
         A DataFrame of the csv file with the index set to specified column name
     """
     dtype = {user_column_name: str} if user_column_name else None
-    return pd.read_csv(location, dtype=dtype, sep=";", quotechar="\"", escapechar="\\").set_index(index)
+    return pd.read_csv(location, dtype=dtype, sep=";", quotechar="\"",
+                       escapechar="\\").set_index(index)
+
 
 def get_item_titles(item_ids, item_list, item_title_column_name):
     """Retrieves the titles of items
@@ -45,6 +48,7 @@ def get_item_titles(item_ids, item_list, item_title_column_name):
     if type(item_ids) is str:
         return item_list[item_list.index == item_ids][item_title_column_name]
     return item_list[item_list.index.isin(item_ids)][item_title_column_name]
+
 
 def user_id_to_series(user, ratings, user_column_name, rating_column_name):
     """Builds a pandas Series of a single user from a pandas DataFrame of
@@ -72,20 +76,21 @@ def user_id_to_series(user, ratings, user_column_name, rating_column_name):
         user_series[item_id] = row[rating_column_name]
     return user_series
 
+
 def restructure_data(ratings, user_column_name, rating_column_name, means=False):
     """Parses a pandas DataFrame into dictionaries for faster processing of data
 
     Parameters
     ----------
-    ratings : 
+    ratings :
         DataFrame containing all users and their corresponding ratings
     user_column_name : str
         Column name of the user id column
     rating_column_name : str
         Column name of the rating column
     means : bool
-        Whether to return a dict of all the users' ratings means. Used for adjusted
-        cosine similarity
+        Whether to return a dict of all the users' ratings means. Used for
+        adjusted cosine similarity
 
     Returns
     -------
@@ -97,17 +102,18 @@ def restructure_data(ratings, user_column_name, rating_column_name, means=False)
         Each user mapped to his/her rating means. Used only for adjusted
         cosine similarity
     """
-    items = defaultdict(list)
-    user_ratings = defaultdict(dict)
+    items = dd(list)
+    user_ratings = dd(dict)
     for item, idx_row in ratings.iterrows():
         items[item].append(idx_row[user_column_name])
         user_ratings[idx_row[user_column_name]][item] = idx_row[rating_column_name]
-    if means == True:
+    if means:
         user_means = {}
         for k, v in user_ratings.iteritems():
             user_means[k] = np.mean(v.values())
         return (items, user_ratings, user_means)
     return (items, user_ratings)
+
 
 def cosine_similarity(vec_1, vec_2):
     """Calculates the cosine similarity between two vectors
@@ -118,7 +124,7 @@ def cosine_similarity(vec_1, vec_2):
         One dimensional array containing item_1s ratings
     vec_2 : array
         One dimensional array containing item_2s ratings. Must be in same user
-        order as vec_1 
+        order as vec_1
 
     Returns
     -------
@@ -132,6 +138,7 @@ def cosine_similarity(vec_1, vec_2):
         d1 += v1**2
         d2 += v2**2
     return 0 if d1 == 0 or d2 == 0 else num/(math.sqrt(d1)*math.sqrt(d2))
+
 
 def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
     """Calculates the adjusted cosine similarity between two vectors
@@ -162,6 +169,7 @@ def adjusted_cosine_similarity(user_averages, vec_1, vec_2):
         d2 += v2**2
     return 0 if d1 == 0 or d2 == 0 else num/(math.sqrt(d1)*math.sqrt(d2))
 
+
 def train_test_split(users_ratings, test_size=0.2, random_state=None):
     """Splits data into training and testing datasets.
 
@@ -184,8 +192,8 @@ def train_test_split(users_ratings, test_size=0.2, random_state=None):
     y_test : defaultdict
         x_test dict but with each item mapped to the actual rating
     """
-    X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
-    if random_state != None:
+    X_train, X_test, y_test = dd(dict), dd(dict), dd(dict)
+    if random_state is not None:
         random.seed(random_state)
     for user, items in users_ratings.iteritems():
         item_keys = items.keys()
@@ -200,6 +208,7 @@ def train_test_split(users_ratings, test_size=0.2, random_state=None):
                 X_train[user].update({key: items[key]})
             idx += 1
     return (X_train, X_test, y_test)
+
 
 def mean_absolute_error(y_test, y_pred):
     """Calculates the mean absolute error value of two vectors
@@ -220,10 +229,11 @@ def mean_absolute_error(y_test, y_pred):
     total, n = 0.0, 0
     for user, items in y_pred.iteritems():
         for item, rating in items.iteritems():
-            if not rating == None:
+            if rating is not None:
                 n += 1
                 total += abs(y_test[user][item] - y_pred[user][item])
     return None if n == 0 else total/n
+
 
 def split_k_fold(users_ratings, kf, items_to_omit=4):
     """Splits data into training and testing folds by indices
@@ -249,7 +259,7 @@ def split_k_fold(users_ratings, kf, items_to_omit=4):
         X_test fold of users with each item that had been set to None now set
         to the actual rating
     """
-    X_train, X_test, y_test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
+    X_train, X_test, y_test = dd(dict), dd(dict), dd(dict)
     keys = users_ratings.keys()
     for i in kf[0]:
         X_train[keys[i]] = users_ratings[keys[i]]
@@ -263,3 +273,4 @@ def split_k_fold(users_ratings, kf, items_to_omit=4):
             else:
                 X_test[keys[j]][k] = v
     return (X_train, X_test, y_test)
+

@@ -4,6 +4,7 @@ import non_personalized_cf as npcf
 import recommender_system as rs
 import numpy as np
 
+
 # Load data
 rated_books = rs.load_item_data('../book_data/BX-Book-Ratings.csv', 'ISBN', 'User-ID')
 all_books = rs.load_item_data('../book_data/BX-Books.csv', 'ISBN')
@@ -14,7 +15,8 @@ all_books = rs.load_item_data('../book_data/BX-Books.csv', 'ISBN')
 min_book_ratings = 16
 min_user_ratings = 3
 
-# Unfortunately, the amount of 0s in the dataset was heavily skewing the data. This removes all 0 values, which gives us about a third of the data to utilize
+# Unfortunately, the amount of 0s in the dataset was heavily skewing the data.
+# This removes all 0 values, which gives us about a third of the data to utilize
 rated_books = rated_books[rated_books['Book-Rating'] != 0]
 
 # The following function keeps only the books with greater than min_book_ratings
